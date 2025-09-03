@@ -1,6 +1,6 @@
 # Team Emerald- Fall 2025
 
-# Members
+## Members
 
  - Cshgill012 - Hannah Gill - hgill012@odu.edu
  - cdona005 - Cody Donahue - cdona005@odu.edu
