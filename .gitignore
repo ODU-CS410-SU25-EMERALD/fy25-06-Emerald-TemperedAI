@@ -21,4 +21,4 @@ gradle-app.setting
 .classpath
 
 # Python bytecode
-.pyc
+*.pyc
