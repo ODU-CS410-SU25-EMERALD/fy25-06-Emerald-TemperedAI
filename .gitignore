@@ -20,5 +20,24 @@ gradle-app.setting
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
+# VS Code
+**/vscode/
+
+#Python Virtual Environment
+**/venv/
+**/env/
+
 # Python bytecode
 *.pyc
+*.pyo
+
+# Local Databases
+*.sqlite3
+
+
+
+# Temporary Files
+*.swp
+*.~
+
+
