@@ -12,7 +12,7 @@ class Assignment(models.Model):
     assignment_id = models.AutoField(primary_key=True)
     due_date = models.TextField(blank=True, null=True)
     settings = models.TextField(blank=True, null=True)
-    course = models.ForeignKey('Course', models.DO_NOTHING, blank=True, null=True)
+    course = models.ForeignKey('Course', models.CASCADE)
 
     class Meta:
         #managed = False
@@ -20,9 +20,9 @@ class Assignment(models.Model):
 
 
 class Conversation(models.Model):
-    conversation_id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', models.DO_NOTHING, blank=True, null=True)
-    assignment = models.ForeignKey(Assignment, models.DO_NOTHING, blank=True, null=True)
+    conversation_id = models.AutoField(primary_key=True, default="12345")
+    student = models.ForeignKey('Student', models.CASCADE)
+    assignment = models.ForeignKey(Assignment, models.CASCADE)
 
     class Meta:
         #managed = False
@@ -42,7 +42,8 @@ class Instructor(models.Model):
     instructor_id = models.AutoField(primary_key=True)
     name = models.TextField(blank=True, null=True)
     email = models.IntegerField(blank=True, null=True)
-    course_id = models.IntegerField(blank=True, null=True)
+    access_token = models.TextField(unique=True)
+    courses = models.ManyToManyField(Course)
 
     class Meta:
         #managed = False
@@ -51,9 +52,9 @@ class Instructor(models.Model):
 
 class Question(models.Model):
     question_id = models.AutoField(primary_key=True)
-    question_text = models.TextField(blank=True, null=True)
-    answer = models.TextField(blank=True, null=True)
-    assignment = models.ForeignKey(Assignment, models.DO_NOTHING, blank=True, null=True)
+    question_text = models.TextField()
+    answer = models.TextField()
+    assignment = models.ForeignKey(Assignment, models.CASCADE)
     conversation = models.ForeignKey(Conversation, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -63,11 +64,11 @@ class Question(models.Model):
 
 class Response(models.Model):
     response_id = models.AutoField(primary_key=True)
-    prompt = models.TextField(blank=True, null=True)
-    raw_response = models.TextField(blank=True, null=True)
-    final_response = models.TextField(blank=True, null=True)
-    time = models.TextField(blank=True, null=True)
-    conversation_id = models.IntegerField(blank=True, null=True)
+    prompt = models.TextField()
+    raw_response = models.TextField()
+    final_response = models.TextField()
+    time = models.TextField()
+    conversation = models.ForeignKey(Conversation, models.CASCADE)
 
     class Meta:
         #managed = False
@@ -78,9 +79,9 @@ class Student(models.Model):
     student_id = models.AutoField(primary_key=True)
     name = models.TextField(blank=True, null=True)
     email = models.TextField(blank=True, null=True)
-    instructor = models.ForeignKey(Instructor, models.DO_NOTHING, blank=True, null=True)
-    course = models.ForeignKey(Course, models.DO_NOTHING, blank=True, null=True)
-    access_token = models.TextField(unique=True, blank=True, null=True)
+    instructor = models.ManyToManyField(Instructor)
+    courses = models.ManyToManyField(Course)
+    access_token = models.TextField(unique=True)
 
     class Meta:
         #managed = False
