@@ -32,137 +32,41 @@ ollamaLogger = logging.getLogger(__name__)
 OLLAMA_API_URL = 'http://localhost:11434/api/generate' # Local Ollama API URL
 OLLAMA_DEFAULT_MODEL = 'llama3.1:8b-instruct-q5_K_M'  # Set preferred default model here
 
-########################################### API GETTERS ############################################
 
-@api_view(['GET'])
-def get_assignment(request):
 
-    assignment_id = request.GET.get('assignment_id')
+######################################## DATABASE ENDPOINTS ########################################
 
-    if not assignment_id:
-        return APIResponse({'error' : 'Missing assignment_id parameter'}, status=400)
+class assignment(ModelViewSet):
+    queryset = Assignment.objects.all
+    serializer_class = AssignmentSerializer
+
+class conversation(ModelViewSet):
+    queryset = Conversation.objects.all
+    serializer_class = ConversationSerializer
     
-    try:
-        assignment = Assignment.objects.get(assignment_id=assignment_id)
-    except:
-        return APIResponse({'error' : 'Assignment Not Found'}, status=404)
-    
-    return APIResponse(CourseSerializer(assignment).data)
+class course(ModelViewSet):
+    queryset = Course.objects.all
+    serializer_class = CourseSerializer
 
-@api_view(['GET'])
-def get_conversation(request):
-    
-    conversation_id = request.GET.get('conversation_id')
+class instructor(ModelViewSet):
+    queryset = Instructor.objects.all
+    serializer_class = InstructorSerializer
 
-    if not conversation_id:
-        return APIResponse({'error' : 'Missing conversation_id parameter'}, status=400)
-    
-    try:
-        conversation = Conversation.objects.get(conversation_id=conversation_id)
-    except:
-        return APIResponse({'error' : 'Conversation Not Found'}, status=404)
-    
-    return APIResponse(CourseSerializer(conversation).data)
+class question(ModelViewSet):
+    queryset = Question.objects.all
+    serializer_class = QuestionSerializer
 
-@api_view(['GET'])
-def get_course(request):
+class LLM_response(ModelViewSet):
+    queryset = LLM_Response.objects.all
+    serializer_class = ResponseSerializer
 
-    course_id = request.GET.get('course_id')
-
-    if not course_id:
-        return APIResponse({'error' : 'Missing course_id parameter'}, status=400)
-    
-    try:
-        course = Course.objects.get(course_id=course_id)
-    except:
-        return APIResponse({'error' : 'Course Not Found'}, status=404)
-    
-    return APIResponse(CourseSerializer(course).data)
-
-@api_view(['GET'])
-def get_instructor(request):
-
-    instructor_id = request.GET.get('instructor_id')
-
-    if not instructor_id:
-        return APIResponse({'error' : 'Missing instructor_id parameter'}, status=400)
-    
-    try:
-        instructor = Instructor.objects.get(instructor_id=instructor_id)
-    except:
-        return APIResponse({'error' : 'Instructor Not Found'}, status=404)
-    
-    return APIResponse(InstructorSerializer(instructor).data)
-
-@api_view(['GET'])
-def get_question(request):
-
-    question_id = request.GET.get('question_id')
-
-    if not question_id:
-        return APIResponse({'error' : 'Missing question_id parameter'}, status=400)
-    
-    try:
-        question = Question.objects.get(question_id=question_id)
-    except:
-        return APIResponse({'error' : 'Question Not Found'}, status=404)
-    
-    return APIResponse(QuestionSerializer(question).data)
-
-@api_view(['GET'])
-# renamed 'response' to 'response_data' and 'get_response' to 'get_api_response' below 
-# since it was causing errors when communicating with Django REST API through terminal due to naming conflicts
-
-# old: def get_response(request):
-def get_api_response(request):
-
-    response_id = request.GET.get('response_id')
-
-    if not response_id:
-        return APIResponse({'error' : 'Missing response_id parameter'}, status=400)
-    
-    try:
-        # old: response = Response.objects.get(response_id=response_id)
-        response_data = Response.objects.get(response_id=response_id)
-    except:
-        # old: return APIResponse({'error' : 'Response Not Found'}, status=404)
-        return APIResponse({'error' : 'Response Not Found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    # old: return APIResponse(ResponseSerializer(response).data)
-    return APIResponse(ResponseSerializer(response_data).data)
-
-@api_view(['GET'])
-def get_student(request):
-
-    student_id = request.GET.get('student_id')
-
-    if not student_id:
-        return APIResponse({'error' : 'Missing student_id parameter'}, status=400)
-    
-    try:
-        student = Student.objects.get(student_id=student_id)
-    except:
-        return APIResponse({'error' : 'Student Not Found'}, status=404)
-    
-    return APIResponse(StudentSerializer(student).data)
-
-#This may not be necessary later on, but I added it here for consistency with the Models available
-@api_view(['GET'])
-def get_djangomigrations(request):
-
-    djangomigrations_name = request.GET.get('name')
-
-    if not djangomigrations_name:
-        return APIResponse({'error' : 'Missing djangomigrations name parameter'}, status=400)
-    
-    try:
-        name = DjangoMigrations.objects.get(name=djangomigrations_name)
-    except:
-        return APIResponse({'error' : 'Django Migration Not Found'}, status=404)
-    
-    return APIResponse(DjangoMigrationsSerializer(name).data)
+class student(ModelViewSet):
+    queryset = Student.objects.all
+    serializer_class = StudentSerializer
 
 
+
+########################################### LLM ENDPOINTS ##########################################
 
 class OllamaGenerateView(APIView):
     """
@@ -242,37 +146,143 @@ class OllamaGenerateView(APIView):
                 {"error": f"An unexpected server error occurred: {e}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-######################################## DATABASE ENDPOINTS ########################################
 
-class assignment(ModelViewSet):
-    queryset = Assignment.objects.all
-    serializer_class = AssignmentSerializer
 
-class conversation(ModelViewSet):
-    queryset = Conversation.objects.all
-    serializer_class = ConversationSerializer
+
+
+
+
+
+
+
+
+# BELOW NO LONGER IN USE???
+########################################### API GETTERS ############################################
+
+# @api_view(['GET'])
+# def get_assignment(request):
+
+#     assignment_id = request.GET.get('assignment_id')
+
+#     if not assignment_id:
+#         return APIResponse({'error' : 'Missing assignment_id parameter'}, status=400)
     
-class course(ModelViewSet):
-    queryset = Course.objects.all
-    serializer_class = CourseSerializer
+#     try:
+#         assignment = Assignment.objects.get(assignment_id=assignment_id)
+#     except:
+#         return APIResponse({'error' : 'Assignment Not Found'}, status=404)
+    
+#     return APIResponse(CourseSerializer(assignment).data)
 
-class instructor(ModelViewSet):
-    queryset = Instructor.objects.all
-    serializer_class = InstructorSerializer
+# @api_view(['GET'])
+# def get_conversation(request):
+    
+#     conversation_id = request.GET.get('conversation_id')
 
-class question(ModelViewSet):
-    queryset = Question.objects.all
-    serializer_class = QuestionSerializer
+#     if not conversation_id:
+#         return APIResponse({'error' : 'Missing conversation_id parameter'}, status=400)
+    
+#     try:
+#         conversation = Conversation.objects.get(conversation_id=conversation_id)
+#     except:
+#         return APIResponse({'error' : 'Conversation Not Found'}, status=404)
+    
+#     return APIResponse(CourseSerializer(conversation).data)
 
-class LLM_response(ModelViewSet):
-    queryset = LLM_Response.objects.all
-    serializer_class = ResponseSerializer
+# @api_view(['GET'])
+# def get_course(request):
 
-class student(ModelViewSet):
-    queryset = Student.objects.all
-    serializer_class = StudentSerializer
+#     course_id = request.GET.get('course_id')
 
-########################################### LLM ENDPOINTS ##########################################
+#     if not course_id:
+#         return APIResponse({'error' : 'Missing course_id parameter'}, status=400)
+    
+#     try:
+#         course = Course.objects.get(course_id=course_id)
+#     except:
+#         return APIResponse({'error' : 'Course Not Found'}, status=404)
+    
+#     return APIResponse(CourseSerializer(course).data)
 
+# @api_view(['GET'])
+# def get_instructor(request):
 
+#     instructor_id = request.GET.get('instructor_id')
 
+#     if not instructor_id:
+#         return APIResponse({'error' : 'Missing instructor_id parameter'}, status=400)
+    
+#     try:
+#         instructor = Instructor.objects.get(instructor_id=instructor_id)
+#     except:
+#         return APIResponse({'error' : 'Instructor Not Found'}, status=404)
+    
+#     return APIResponse(InstructorSerializer(instructor).data)
+
+# @api_view(['GET'])
+# def get_question(request):
+
+#     question_id = request.GET.get('question_id')
+
+#     if not question_id:
+#         return APIResponse({'error' : 'Missing question_id parameter'}, status=400)
+    
+#     try:
+#         question = Question.objects.get(question_id=question_id)
+#     except:
+#         return APIResponse({'error' : 'Question Not Found'}, status=404)
+    
+#     return APIResponse(QuestionSerializer(question).data)
+
+# @api_view(['GET'])
+# # renamed 'response' to 'response_data' and 'get_response' to 'get_api_response' below 
+# # since it was causing errors when communicating with Django REST API through terminal due to naming conflicts
+
+# # old: def get_response(request):
+# def get_api_response(request):
+
+#     response_id = request.GET.get('response_id')
+
+#     if not response_id:
+#         return APIResponse({'error' : 'Missing response_id parameter'}, status=400)
+    
+#     try:
+#         # old: response = Response.objects.get(response_id=response_id)
+#         response_data = Response.objects.get(response_id=response_id)
+#     except:
+#         # old: return APIResponse({'error' : 'Response Not Found'}, status=404)
+#         return APIResponse({'error' : 'Response Not Found'}, status=status.HTTP_404_NOT_FOUND)
+    
+#     # old: return APIResponse(ResponseSerializer(response).data)
+#     return APIResponse(ResponseSerializer(response_data).data)
+
+# @api_view(['GET'])
+# def get_student(request):
+
+#     student_id = request.GET.get('student_id')
+
+#     if not student_id:
+#         return APIResponse({'error' : 'Missing student_id parameter'}, status=400)
+    
+#     try:
+#         student = Student.objects.get(student_id=student_id)
+#     except:
+#         return APIResponse({'error' : 'Student Not Found'}, status=404)
+    
+#     return APIResponse(StudentSerializer(student).data)
+
+# #This may not be necessary later on, but I added it here for consistency with the Models available
+# @api_view(['GET'])
+# def get_djangomigrations(request):
+
+#     djangomigrations_name = request.GET.get('name')
+
+#     if not djangomigrations_name:
+#         return APIResponse({'error' : 'Missing djangomigrations name parameter'}, status=400)
+    
+#     try:
+#         name = DjangoMigrations.objects.get(name=djangomigrations_name)
+#     except:
+#         return APIResponse({'error' : 'Django Migration Not Found'}, status=404)
+    
+#     return APIResponse(DjangoMigrationsSerializer(name).data)
