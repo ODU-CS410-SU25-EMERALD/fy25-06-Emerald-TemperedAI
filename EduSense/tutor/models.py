@@ -81,7 +81,7 @@ class Question(models.Model):
         db_table = 'Question'
 
 
-class Response(models.Model):
+class LLM_Response(models.Model):
     response_id = models.AutoField(primary_key=True)
     prompt = models.TextField()
     raw_response = models.TextField()
@@ -121,5 +121,5 @@ class DjangoMigrations(models.Model):
         return self.name
 
     class Meta:
-        #managed = False
+        managed = False
         db_table = 'django_migrations'

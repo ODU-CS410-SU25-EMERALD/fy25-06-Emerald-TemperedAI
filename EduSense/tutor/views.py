@@ -2,7 +2,8 @@
 # EduSense Views
 # Author: Dillon Sapp, Christian Biehn
 #
-# This file defines handlers for the various API requests to our database and Ollama.
+# This file defines handlers for the various API requests to our database and LLM. Using DRF 
+# ModelViewSets creates a full set of CRUD API endpoints for each item in the database.
 ####################################################################################################
 
 import requests # required for Ollama HTTP calls
@@ -13,6 +14,7 @@ import logging  # required for error logging
 #from rest_framework.decorators import APIView
 #from rest_framework.response import Response
 
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView 
 # renamed '@APIView' in entire file (views.py) to '@api_view' due to reason above
 from rest_framework.decorators import api_view 
@@ -240,3 +242,37 @@ class OllamaGenerateView(APIView):
                 {"error": f"An unexpected server error occurred: {e}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+######################################## DATABASE ENDPOINTS ########################################
+
+class assignment(ModelViewSet):
+    queryset = Assignment.objects.all
+    serializer_class = AssignmentSerializer
+
+class conversation(ModelViewSet):
+    queryset = Conversation.objects.all
+    serializer_class = ConversationSerializer
+    
+class course(ModelViewSet):
+    queryset = Course.objects.all
+    serializer_class = CourseSerializer
+
+class instructor(ModelViewSet):
+    queryset = Instructor.objects.all
+    serializer_class = InstructorSerializer
+
+class question(ModelViewSet):
+    queryset = Question.objects.all
+    serializer_class = QuestionSerializer
+
+class LLM_response(ModelViewSet):
+    queryset = LLM_Response.objects.all
+    serializer_class = ResponseSerializer
+
+class student(ModelViewSet):
+    queryset = Student.objects.all
+    serializer_class = StudentSerializer
+
+########################################### LLM ENDPOINTS ##########################################
+
+
+
