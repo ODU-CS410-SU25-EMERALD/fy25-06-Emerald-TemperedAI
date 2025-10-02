@@ -27,7 +27,6 @@ router.register(r'students', views.student, basename='student')
 # API URLs now determined automatically by router.
 urlpatterns = [
      path('', include(router.urls)), 
-    
     # custom path for Ollama proxy (Class-Based View)
      path('ollama/generate/', views.OllamaGenerateView.as_view(), name='ollama_generate'),
 ]

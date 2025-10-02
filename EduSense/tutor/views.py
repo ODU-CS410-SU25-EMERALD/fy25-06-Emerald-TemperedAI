@@ -37,30 +37,51 @@ OLLAMA_DEFAULT_MODEL = 'llama3.1:8b-instruct-q5_K_M'  # Set preferred default mo
 ######################################## DATABASE ENDPOINTS ########################################
 
 class assignment(ModelViewSet):
+    """
+    Creates an Assignment ModelViewSet to provide CRUD API functionality for accessing the Assignment model
+    """
     queryset = Assignment.objects.all
     serializer_class = AssignmentSerializer
 
 class conversation(ModelViewSet):
+    """
+    Creates a Conversation ModelViewSet to provide CRUD API functionality for accessing Conversation model
+    """
     queryset = Conversation.objects.all
     serializer_class = ConversationSerializer
     
 class course(ModelViewSet):
+    """
+    Creates a Course  ModelViewSet to provide CRUD API functionality for accessing the Course model
+    """
     queryset = Course.objects.all
     serializer_class = CourseSerializer
 
 class instructor(ModelViewSet):
+    """
+    Creates an Instructor ModelViewSet to provide CRUD API functionality for accessing the Instructor model
+    """
     queryset = Instructor.objects.all
     serializer_class = InstructorSerializer
 
 class question(ModelViewSet):
+    """
+    Creates an Question ModelViewSet to provide CRUD API functionality for accessing the Question model
+    """
     queryset = Question.objects.all
     serializer_class = QuestionSerializer
 
 class LLM_response(ModelViewSet):
+    """
+    Creates an LLM Response ModelViewSet to provide CRUD API functionality for accessing the LLM Response model
+    """
     queryset = LLM_Response.objects.all
     serializer_class = ResponseSerializer
 
 class student(ModelViewSet):
+    """
+    Creates a Student ModelViewSet to provide CRUD API functionality for accessing the Student model
+    """
     queryset = Student.objects.all
     serializer_class = StudentSerializer
 
@@ -72,10 +93,9 @@ class OllamaGenerateView(APIView):
     """
     Proxies POST requests from the client to the local Ollama API server.
     """
-    
     def post(self, request, *args, **kwargs):
         try:
-            # get promopt data
+            # get prompt data
             ollamaPrompt = request.data.get('prompt')
             # gets model data
             ollamaModel = request.data.get('model', OLLAMA_DEFAULT_MODEL)
