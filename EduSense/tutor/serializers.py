@@ -35,7 +35,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Response
+        model = LLM_Response
         fields = '__all__'
 
 class StudentSerializer(serializers.ModelSerializer):
