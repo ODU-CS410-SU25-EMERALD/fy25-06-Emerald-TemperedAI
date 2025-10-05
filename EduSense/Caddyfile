@@ -1,0 +1,11 @@
+localhost:8080 {
+	# Reverse proxy all requests to Uvicorn
+	reverse_proxy 127.0.0.1:8000
+
+	# Security headers
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+		Access-Control-Allow-Headers "Authorization, Content-Type"
+	}
+}
