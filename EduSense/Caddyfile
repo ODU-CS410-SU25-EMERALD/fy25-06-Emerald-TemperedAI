@@ -6,7 +6,7 @@
 # (to our Django backend)
 ####################################################################################################
 
-:443 {
+localhost:443 {
     # Access to frontend static files
     root * frontend/dist
     encode gzip zstd
