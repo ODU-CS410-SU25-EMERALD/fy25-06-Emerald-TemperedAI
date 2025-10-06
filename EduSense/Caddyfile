@@ -18,7 +18,7 @@
 	}
 
 	# Reverse proxy to Django backend
-	reverse_proxy @api localhost:8000{
+	reverse_proxy @api localhost:8000 {
 		rate_limit{
 			zone django_zone 100 1m
 		}
