@@ -6,9 +6,9 @@
 # (to our Django backend)
 ####################################################################################################
 
-localhost:443 {
+edusensetutor.org {
     # Access to frontend static files
-    root * frontend/dist
+    root * interface/dist
     encode gzip zstd
     file_server
     try_files {path} /index.html
