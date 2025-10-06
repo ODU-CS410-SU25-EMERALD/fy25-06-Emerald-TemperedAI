@@ -18,11 +18,6 @@
         path /api/*
     }
 
-    # Rate limit
-    rate_limit @api {
-        zone django_zone 100 1m
-    }
-
     # Reverse proxy to Django backend
     reverse_proxy @api localhost:8000
 
