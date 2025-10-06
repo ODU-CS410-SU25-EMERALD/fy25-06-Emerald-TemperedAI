@@ -7,32 +7,35 @@
 ####################################################################################################
 
 :443 {
-	# Access to frontend static files
-	root * /frontend/dist
-	file_server
-	try_files {path} /index.html
+    # Access to frontend static files
+    root * frontend/dist
+    encode gzip zstd
+    file_server
+    try_files {path} /index.html
 
-	# Path to route to
-	@api {
-		path /api/*
-	}
+    # Path to route to
+    @api {
+        path /api/*
+    }
 
-	# Reverse proxy to Django backend
-	reverse_proxy @api localhost:8000 {
-		rate_limit{
-			zone django_zone 100 1m
-		}
-	}
+    # Rate limit
+    rate_limit @api {
+        zone django_zone 100 1m
+    }
 
-	# Security headers
-	header {
+    # Reverse proxy to Django backend
+    reverse_proxy @api localhost:8000
+
+    # Security headers
+    header {
         X-Frame-Options "DENY"
         X-Content-Type-Options "nosniff"
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         Referrer-Policy "no-referrer-when-downgrade"
-        Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), camera=(), display-capture=(), 
-		 					fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), 
-							usb=(), xr-spatial-tracking=(), sync-xhr=(), wake-lock=(self), picture-in-picture=(self)"
+        Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), camera=(), display-capture=(), \
+fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), \
+usb=(), xr-spatial-tracking=(), sync-xhr=(), wake-lock=(self), picture-in-picture=(self)"
         Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;"
-	}
+    }
 }
+
