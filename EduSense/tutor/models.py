@@ -48,7 +48,7 @@ class Conversation(models.Model):
 class Course(models.Model):
     """
     Represents a Canvas course connected by the instructor for the purpose of allowing a student to use the LLM with the course
-    with a course-specific configuration.
+    including a course-specific configuration.
     """
     #Model Fields
     course_id = models.AutoField(primary_key=True)

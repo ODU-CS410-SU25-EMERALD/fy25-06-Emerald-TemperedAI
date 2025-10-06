@@ -1,11 +1,38 @@
-localhost:8080 {
-	# Reverse proxy all requests to Uvicorn
-	reverse_proxy 127.0.0.1:8000
+####################################################################################################   
+# EduSense Caddyfile
+# Author: Dillon Sapp
+#
+# This file tells Caddy where the frontend files are and where to send api requests 
+# (to our Django backend)
+####################################################################################################
+
+:443 {
+	# Access to frontend static files
+	root * /frontend/dist
+	file_server
+	try_files {path} /index.html
+
+	# Path to route to
+	@api {
+		path /api/*
+	}
+
+	# Reverse proxy to Django backend
+	reverse_proxy @api localhost:8000{
+		rate_limit{
+			zone django_zone 100 1m
+		}
+	}
 
 	# Security headers
 	header {
-		Access-Control-Allow-Origin *
-		Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-		Access-Control-Allow-Headers "Authorization, Content-Type"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        Referrer-Policy "no-referrer-when-downgrade"
+        Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), camera=(), display-capture=(), 
+		 					fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), 
+							usb=(), xr-spatial-tracking=(), sync-xhr=(), wake-lock=(self), picture-in-picture=(self)"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;"
 	}
 }

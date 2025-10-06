@@ -117,15 +117,16 @@ class OllamaGenerateView(APIView):
         ollamaPayload = {
             "model": ollamaModel,
             "prompt": ollamaPrompt,
-            "stream": False,  # requests full response at once (not line-by-line); tried with 'True', causes error when contacting Django via terminal ({"error":"Ollama API request failed. Status: 200"})
+            "stream": False,  # requests full response at once (not line-by-line); tried with 'True', 
+                              # causes error when contacting Django via terminal ({"error":"Ollama API request failed. Status: 200"})
         }
 
         # forwards request to Ollama
         try:
             ollamaResponse = requests.post(
                 OLLAMA_API_URL,
-                json=ollamaPayload,
-                timeout=300 # 300s = 5min timeout for slow generations
+                json = ollamaPayload,
+                timeout = 300 # 300s = 5min timeout for slow generations
             )
             
             # checks for HTTP errors from Ollama (e.g., 404, 500)
