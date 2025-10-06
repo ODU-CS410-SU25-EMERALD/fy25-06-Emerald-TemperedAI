@@ -6,7 +6,9 @@
 # (to our Django backend)
 ####################################################################################################
 
-edusensetutor.org {
+:443 {
+	#Prevents Caddy from looking for Let's Encrypt certs
+	tls internal 
     # Access to frontend static files
     root * interface/dist
     encode gzip zstd
