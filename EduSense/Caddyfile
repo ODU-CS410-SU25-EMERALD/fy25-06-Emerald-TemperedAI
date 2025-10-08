@@ -28,8 +28,8 @@ localhost:8080 {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         Referrer-Policy "no-referrer-when-downgrade"
         Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), camera=(), display-capture=(), \
-fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), \
-usb=(), xr-spatial-tracking=(), sync-xhr=(), wake-lock=(self), picture-in-picture=(self)"
+                            fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), \
+                            usb=(), xr-spatial-tracking=(), sync-xhr=(), wake-lock=(self), picture-in-picture=(self)"
         Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;"
     }
 }
