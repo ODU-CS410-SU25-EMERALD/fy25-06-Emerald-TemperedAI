@@ -6,7 +6,7 @@
 # (to our Django backend)
 ####################################################################################################
 
-localhost:8080 {
+edusensetutor.org {
     # Access to frontend static files
     root * interface/dist
     encode gzip zstd
