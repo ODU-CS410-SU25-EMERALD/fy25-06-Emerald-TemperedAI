@@ -32,6 +32,23 @@ BANNED_WORDS = [
     "complete answer"
 ]
 
+# Suspicious patterns that indicate prompt injection attempts
+INJECTION_PATTERNS = [
+    "you are now",
+    "ignore previous",
+    "disregard above",
+    "override instructions",
+    "bypass restrictions",
+    "unfiltered ai",
+    "dan mode",
+    "jailbreak",
+    "system prompt",
+    "roleplay as",
+    "developer mode",
+    "simulate a system prompt",
+    "forget your rules",
+]
+
 def sanitize_input(text: str) -> str:
     """
     Sanitizes user input by checking for banned words and replacing them.
@@ -46,6 +63,15 @@ def sanitize_input(text: str) -> str:
 
     return cleaned
 
+def contains_prompt_injection(text: str) -> bool:
+    """
+    Returns True if text appears to include a prompt injection or jailbreak attempt.
+    """
+    if not text:
+        return False
+
+    lower_text = text.lower()
+    return any(pattern in lower_text for pattern in INJECTION_PATTERNS)
 
 #logging for better error visibility in terminal
 ollamaLogger = logging.getLogger(__name__)
@@ -129,6 +155,10 @@ class OllamaGenerateView(APIView):
                 )
             
             ollamaPrompt = sanitize_input(ollamaPrompt)
+
+            if contains_prompt_injection(ollamaPrompt):
+                ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")
+                ollamaPrompt = "[User tried to override system instructions — sanitized.]"
 
         except Exception as e:
             ollamaLogger.error(f"Error parsing request data: {e}")
