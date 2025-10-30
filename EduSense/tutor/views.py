@@ -28,6 +28,14 @@ from .serializers import *
 #List of banned words for content moderation
 BANNED_WORDS = [
     "cheat",
+    "cheat sheet",
+    "answer key",
+    "answer-key",
+    "solution",
+    "give me the answers",
+    "step by step solution",
+    "final answers",
+    "test answers",
     "full solution",
     "complete answer"
 ]
@@ -40,13 +48,14 @@ INJECTION_PATTERNS = [
     "override instructions",
     "bypass restrictions",
     "unfiltered ai",
-    "dan mode",
     "jailbreak",
     "system prompt",
     "roleplay as",
     "developer mode",
     "simulate a system prompt",
     "forget your rules",
+    "dan mode",
+    "do anything now"
 ]
 
 def sanitize_input(text: str) -> str:
