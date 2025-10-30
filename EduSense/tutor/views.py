@@ -25,12 +25,34 @@ from .models import *
 from .serializers import *
 
 
+#List of banned words for content moderation
+BANNED_WORDS = [
+    "cheat",
+    "full solution",
+    "complete answer"
+]
+
+def sanitize_input(text: str) -> str:
+    """
+    Sanitizes user input by checking for banned words and replacing them.
+    Returns the sanitized string (with banned words replaced by "[filtered]").
+    """
+    if not text:
+        return text
+
+    cleaned = text
+    for word in BANNED_WORDS:
+        cleaned = cleaned.replace(word, "[filtered]")
+
+    return cleaned
+
+
 #logging for better error visibility in terminal
 ollamaLogger = logging.getLogger(__name__)
 
 # Ollama Config
 OLLAMA_API_URL = 'http://localhost:11434/api/generate' # Local Ollama API URL
-OLLAMA_DEFAULT_MODEL = 'llama3.1:8b-instruct-q5_K_M'  # Set preferred default model here
+OLLAMA_DEFAULT_MODEL = 'edusense:latest'  # Set preferred default model here
 
 
 
@@ -105,6 +127,8 @@ class OllamaGenerateView(APIView):
                     {"error": "A 'prompt' field is required in the request body."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            
+            ollamaPrompt = sanitize_input(ollamaPrompt)
 
         except Exception as e:
             ollamaLogger.error(f"Error parsing request data: {e}")
