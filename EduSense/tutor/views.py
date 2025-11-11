@@ -68,7 +68,10 @@ def sanitize_input(text: str) -> str:
 
     cleaned = text
     for word in BANNED_WORDS:
+        if word in cleaned:
+            ollamaLogger.warning(f"[Sanitizer] Redacting banned word: '{word}' from: {text}")
         cleaned = cleaned.replace(word, "[filtered]")
+        
 
     return cleaned
 
@@ -80,7 +83,11 @@ def contains_prompt_injection(text: str) -> bool:
         return False
 
     lower_text = text.lower()
-    return any(pattern in lower_text for pattern in INJECTION_PATTERNS)
+    for pattern in INJECTION_PATTERNS:
+        if pattern in lower_text:
+            ollamaLogger.warning(f"[Sanitizer] Detected potential prompt injection pattern: '{pattern}' in: {text}")
+            return True
+   
 
 #logging for better error visibility in terminal
 ollamaLogger = logging.getLogger(__name__)

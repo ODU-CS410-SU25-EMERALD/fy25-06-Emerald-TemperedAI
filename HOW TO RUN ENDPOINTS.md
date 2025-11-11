@@ -20,7 +20,7 @@ For more information on production servers see: https://docs.djangoproject.com/e
 
 
 - *** Ensure Ollama is running (icon in task bar) ***
-IF NOT RUN:              ollama run llama3.1:8b-instruct-q5_K_M\
+IF NOT RUN:              ollama run edusense:latest
 
 
 
@@ -36,7 +36,13 @@ curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/ ^
 
 curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/ ^
      -H "Content-Type: application/json" ^
-     -d "{\"prompt\": \"What is the space and time complexity of a ten times nested for loop in C++. Answer only.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"       
+     -d "{\"prompt\": \"What is the space and time complexity of a ten times nested for loop in C++. Answer only.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"     
+
+*** Only receive response back from the LLM***
+Use this when you only want to see the prompt returned instead of the full JSON
+
+(Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/tutor/ollama/generate/" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body '{"prompt": "What is 2+2", "model": "edusense:latest"}').Content | ConvertFrom-Json | Select-Object -ExpandProperty response
+
 
 - ***Response could be***
 {"model":"llama3.1:8b-instruct-q5_K_M","created_at":"*DATE&TIME*","response":"4","done":true,"done_reason":"stop","context":[*VARIOUS INTEGERS*],"total_duration":823654600,"load_duration":151879400,"prompt_eval_count":20,"prompt_eval_duration":417835900,"eval_count":2,"eval_duration":252900300}
