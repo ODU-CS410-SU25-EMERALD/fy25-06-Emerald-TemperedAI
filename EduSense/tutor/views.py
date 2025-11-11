@@ -9,11 +9,13 @@
 import requests # required for Ollama HTTP calls
 import json     # required for handling JSON
 import logging  # required for error logging
+import os
 
 #was causing errors when communicating with Django REST API through terminal or when starting Python server (forgot which) due to naming conflicts
 #from rest_framework.decorators import APIView
 #from rest_framework.response import Response
 
+from markitdown import MarkItDown
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView 
 # renamed '@APIView' in entire file (views.py) to '@api_view' due to reason above
@@ -32,7 +34,7 @@ BANNED_WORDS = [
     "answer key",
     "answer-key",
     "solution",
-    "give me the answers",
+    "give me the answer",
     "step by step solution",
     "final answers",
     "test answers",
@@ -74,6 +76,33 @@ def sanitize_input(text: str) -> str:
         
 
     return cleaned
+
+def convert_file_to_markdown(uploaded_file):
+    """
+    Converts an uploaded file to Markdown using MarkItDown.
+    Returns the Markdown text or None if conversion fails.
+    """
+    md = MarkItDown()
+    temp_path = os.path.join("/tmp", os.path.basename(uploaded_file.name.replace("\\", "/")))
+
+
+    # Save the file temporarily
+    with open(temp_path, "wb+") as destination:
+        for chunk in uploaded_file.chunks():
+            destination.write(chunk)
+
+    try:
+        result = md.convert(temp_path)
+        markdown_text = result.text_content
+        ollamaLogger.info(f"[MarkItDown] Successfully converted {uploaded_file.name} to Markdown.")
+        return markdown_text
+    except Exception as e:
+        ollamaLogger.error(f"[MarkItDown] Conversion failed for {uploaded_file.name}: {e}")
+        return None
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
 
 def contains_prompt_injection(text: str) -> bool:
     """
@@ -150,7 +179,6 @@ class student(ModelViewSet):
     serializer_class = StudentSerializer
 
 
-
 ########################################### LLM ENDPOINTS ##########################################
 
 class OllamaGenerateView(APIView):
@@ -163,6 +191,17 @@ class OllamaGenerateView(APIView):
             ollamaPrompt = request.data.get('prompt')
             # gets model data
             ollamaModel = request.data.get('model', OLLAMA_DEFAULT_MODEL)
+            if 'file' in request.FILES:
+                uploaded_file = request.FILES['file']
+                markdown_text = convert_file_to_markdown(uploaded_file)
+                if markdown_text:
+                    # Append converted Markdown to any existing prompt
+                    ollamaPrompt = (ollamaPrompt or "") + "\n\n---\n\n" + markdown_text
+                else:
+                    return APIResponse(
+                        {"error": "Failed to convert file to Markdown."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
             if not ollamaPrompt:
                 return APIResponse(
