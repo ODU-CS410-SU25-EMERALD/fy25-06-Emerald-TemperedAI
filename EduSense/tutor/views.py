@@ -28,6 +28,7 @@ from rest_framework import status
 from .models import *
 from .serializers import *
 
+logging.getLogger("markitdown").setLevel(logging.ERROR)
 
 #List of banned words for content moderation
 BANNED_WORDS = [
@@ -84,6 +85,7 @@ def convert_file_to_markdown(uploaded_file):
     Converts an uploaded file to Markdown using MarkItDown.
     Returns the Markdown text or None if conversion fails.
     """
+
     md = MarkItDown()
    
     temp_dir = Path(tempfile.gettempdir())
@@ -115,13 +117,14 @@ def contains_prompt_injection(text: str) -> bool:
     """
     Returns True if text appears to include a prompt injection or jailbreak attempt.
     """
+    ollamaLogger.debug(f"[Sanitizer] Checking for prompt injection in: {text}")
     if not text:
         return False
 
     lower_text = text.lower()
     for pattern in INJECTION_PATTERNS:
         if pattern in lower_text:
-            ollamaLogger.warning(f"[Sanitizer] Detected potential prompt injection pattern: '{pattern}' in: {text}")
+            ollamaLogger.error(f"[Sanitizer] Detected potential prompt injection pattern: '{pattern}' in: {text}")
             return True
    
 
