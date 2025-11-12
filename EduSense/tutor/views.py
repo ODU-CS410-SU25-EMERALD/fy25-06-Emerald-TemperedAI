@@ -6,6 +6,8 @@
 # ModelViewSets creates a full set of CRUD API endpoints for each item in the database.
 ####################################################################################################
 
+from pathlib import Path
+import tempfile
 import requests # required for Ollama HTTP calls
 import json     # required for handling JSON
 import logging  # required for error logging
@@ -83,7 +85,12 @@ def convert_file_to_markdown(uploaded_file):
     Returns the Markdown text or None if conversion fails.
     """
     md = MarkItDown()
-    temp_path = os.path.join("/tmp", os.path.basename(uploaded_file.name.replace("\\", "/")))
+   
+    temp_dir = Path(tempfile.gettempdir())
+    filename = Path(uploaded_file.name).name
+    temp_path = temp_dir / filename
+
+
 
 
     # Save the file temporarily
