@@ -225,6 +225,7 @@ class OllamaGenerateView(APIView):
                 ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")
                 ollamaPrompt = "[User tried to override system instructions — sanitized.]"
 
+        # be more specific with error handling
         except Exception as e:
             ollamaLogger.error(f"Error parsing request data: {e}")
             return APIResponse(

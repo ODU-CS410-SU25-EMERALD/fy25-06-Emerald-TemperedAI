@@ -8,7 +8,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-
+from tutor.views import OllamaGenerateView
 # namespace for application
 app_name = 'tutor'
 
@@ -29,4 +29,8 @@ urlpatterns = [
      path('', include(router.urls)), 
      # custom path for Ollama proxy (Class-Based View)
      path('ollama/generate/', views.OllamaGenerateView.as_view(), name='ollama_generate'),
+     
+    
+
+
 ]

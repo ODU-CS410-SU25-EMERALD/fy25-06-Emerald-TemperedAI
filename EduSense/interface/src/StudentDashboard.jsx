@@ -34,30 +34,55 @@ export default function StudentDashboard() {
     ]);
   }, []);
 
+async function sendPromptToBackend(prompt) {
+  try {
+    const response = await fetch("http://localhost:8000/api/ollama/generate/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return (
+      data.response ||
+      data.message ||
+      data.output ||
+      data.text ||
+      data?.choices?.[0]?.message?.content ||
+      "No response from AI."
+    );
+  } catch (error) {
+    return `Error: ${error.message}`;
+  }
+}
+
   // For now, this only updates the chat visually — no backend call yet
-  const sendPrompt = () => {
+  const sendPrompt = async () => {
     if (!userInput.trim()) return;
 
-    const newMessage = {
+    const studentMsg = {
       sender: "student",
       text: userInput,
       time: new Date().toLocaleTimeString(),
     };
 
-    setChat((prev) => [...prev, newMessage]);
+    setChat((prevChat) => [...prevChat, studentMsg]);
 
-    // Simulate an empty AI placeholder response
-    setTimeout(() => {
-      setChat((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          text: "(AI response will appear here once backend is connected.)",
-          time: new Date().toLocaleTimeString(),
-        },
-      ]);
-    }, 500);
+    const promptToSend = `Course: ${selectedCourse}\nAssignment: ${selectedAssignment}\nQuestion: ${userInput}`;
 
+    const aiText = await sendPromptToBackend(promptToSend);
+
+    const aiMsg = {
+      sender: "ai",
+      text: aiText,
+      time: new Date().toLocaleTimeString(),
+    };
+    setChat((prevChat) => [...prevChat, aiMsg]);
     setUserInput("");
   };
 
