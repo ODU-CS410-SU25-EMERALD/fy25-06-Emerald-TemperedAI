@@ -79,7 +79,25 @@ export default function StudentDashboard() {
 
     setChat((prevChat) => [...prevChat, studentMsg]);
 
-    const promptToSend = `Course: ${selectedCourse}\nAssignment: ${selectedAssignment}\nQuestion: ${userInput}`;
+    const updatedHistory = [
+      ...chat,
+      studentMsg 
+    ].slice(-12); // Limit to last 12 messages for context
+
+    const historyText = updatedHistory
+      .map((msg) => `${msg.sender === "student" ? "Student" : "AI"}: ${msg.text}`)
+      .join("\n");
+
+    const promptToSend = `
+    Course: ${selectedCourse}
+    Assignment: ${selectedAssignment}
+
+    Conversation History:
+    ${historyText}
+
+    Student's New Question:
+    ${userInput}
+    `;
 
     const aiText = await sendPromptToBackend(promptToSend, selectedFile);
 
@@ -95,15 +113,15 @@ export default function StudentDashboard() {
 
   const startNewChat = () => {
     setChat([
-    {
-      sender: "ai",
-      text: "Starting a new conversation. How can I help?",
-      time: new Date().toLocaleTimeString(),
-    },
-  ]);
-  setUserInput("");
-  setSelectedFile(null);
-};
+      {
+        sender: "ai",
+        text: "Starting a new conversation. How can I help?",
+        time: new Date().toLocaleTimeString(),
+      },
+    ]);
+    setUserInput("");
+    setSelectedFile(null);
+  };
 
   const handleLogout = () => {
     setChat([]);
