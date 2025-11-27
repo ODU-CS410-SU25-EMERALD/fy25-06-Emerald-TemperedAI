@@ -21,6 +21,7 @@ export default function StudentDashboard() {
   const [userInput, setUserInput] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedAssignment, setSelectedAssignment] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const navigate = useNavigate();
 
   // Display a welcome message on load
@@ -34,32 +35,37 @@ export default function StudentDashboard() {
     ]);
   }, []);
 
-async function sendPromptToBackend(prompt) {
-  try {
-    const response = await fetch("http://localhost:8000/api/ollama/generate/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt }),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  async function sendPromptToBackend(prompt, file) {
+    try {
+      const formData = new FormData();
+      formData.append("prompt", prompt);
 
-    const data = await response.json();
-    return (
-      data.response ||
-      data.message ||
-      data.output ||
-      data.text ||
-      data?.choices?.[0]?.message?.content ||
-      "No response from AI."
-    );
-  } catch (error) {
-    return `Error: ${error.message}`;
+      if (file) {
+        formData.append("file", file);
+      }
+
+      const response = await fetch("http://localhost:8000/api/ollama/generate/", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return (
+        data.response ||
+        data.message ||
+        data.output ||
+        data.text ||
+        data?.choices?.[0]?.message?.content ||
+        "No response from AI."
+      );
+    } catch (error) {
+      return `Error: ${error.message}`;
+    }
   }
-}
 
   // For now, this only updates the chat visually — no backend call yet
   const sendPrompt = async () => {
@@ -75,7 +81,7 @@ async function sendPromptToBackend(prompt) {
 
     const promptToSend = `Course: ${selectedCourse}\nAssignment: ${selectedAssignment}\nQuestion: ${userInput}`;
 
-    const aiText = await sendPromptToBackend(promptToSend);
+    const aiText = await sendPromptToBackend(promptToSend, selectedFile);
 
     const aiMsg = {
       sender: "ai",
@@ -84,6 +90,7 @@ async function sendPromptToBackend(prompt) {
     };
     setChat((prevChat) => [...prevChat, aiMsg]);
     setUserInput("");
+    setSelectedFile(null);
   };
 
   const handleLogout = () => {
@@ -188,16 +195,14 @@ async function sendPromptToBackend(prompt) {
               chat.map((msg, i) => (
                 <div
                   key={i}
-                  className={`mb-4 ${
-                    msg.sender === "student" ? "text-right" : "text-left"
-                  }`}
+                  className={`mb-4 ${msg.sender === "student" ? "text-right" : "text-left"
+                    }`}
                 >
                   <div
-                    className={`inline-block px-4 py-2 rounded-lg shadow-sm ${
-                      msg.sender === "student"
-                        ? "bg-blue-100 border border-blue-200"
-                        : "bg-gray-100 border border-gray-200"
-                    }`}
+                    className={`inline-block px-4 py-2 rounded-lg shadow-sm ${msg.sender === "student"
+                      ? "bg-blue-100 border border-blue-200"
+                      : "bg-gray-100 border border-gray-200"
+                      }`}
                   >
                     <p>{msg.text}</p>
                     <p className="text-xs text-gray-500 mt-1">{msg.time}</p>
@@ -208,7 +213,15 @@ async function sendPromptToBackend(prompt) {
           </div>
 
           {/* Input Area */}
-          <div className="p-4 border-t flex">
+          <div className="p-4 border-t flex gap-2 items-center">
+            <input
+              key={selectedFile ? selectedFile.name : "empty"}
+              type="file"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="border rounded-md p-2"
+            />
+
+
             <input
               type="text"
               className="flex-1 border rounded-md px-3 py-2"
@@ -216,6 +229,7 @@ async function sendPromptToBackend(prompt) {
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
             />
+
             <button
               onClick={sendPrompt}
               className="ml-2 bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
@@ -223,6 +237,7 @@ async function sendPromptToBackend(prompt) {
               ➤
             </button>
           </div>
+
         </div>
       </div>
     </div>
