@@ -174,7 +174,7 @@ class question(ModelViewSet):
     queryset = Question.objects.all
     serializer_class = QuestionSerializer
 
-class LLM_response(ModelViewSet):
+class LLM_responseViewSet(ModelViewSet):
     """
     Creates an LLM Response ModelViewSet to provide CRUD API functionality for accessing the LLM Response model
     """

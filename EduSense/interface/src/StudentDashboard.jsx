@@ -22,6 +22,8 @@ export default function StudentDashboard() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedAssignment, setSelectedAssignment] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [conversationId, setConversationId] = useState(null);
+  const [conversationList, setConversationList] = useState([]);
   const navigate = useNavigate();
 
   // Display a welcome message on load
@@ -71,6 +73,25 @@ export default function StudentDashboard() {
   const sendPrompt = async () => {
     if (!userInput.trim()) return;
 
+    // If starting a new chat, create conversation in backend
+    let convId = conversationId;
+
+    if (!convId) {
+      const newConv = await fetch("http://localhost:8000/api/conversations/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "New Chat",
+          course: selectedCourse,
+          assignment: selectedAssignment,
+        }),
+      }).then((res) => res.json());
+
+      convId = newConv.id;
+      setConversationId(convId);
+    }
+
+
     const studentMsg = {
       sender: "student",
       text: userInput,
@@ -79,9 +100,21 @@ export default function StudentDashboard() {
 
     setChat((prevChat) => [...prevChat, studentMsg]);
 
+    await fetch('http://localhost:8000/api/questions/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question_text: userInput,
+        answer: "",
+        assignment: selectedAssignment,
+        conversation: convId,
+      }),
+    }
+    )
+
     const updatedHistory = [
       ...chat,
-      studentMsg 
+      studentMsg
     ].slice(-12); // Limit to last 12 messages for context
 
     const historyText = updatedHistory
@@ -106,6 +139,25 @@ export default function StudentDashboard() {
       text: aiText,
       time: new Date().toLocaleTimeString(),
     };
+
+    await fetch('http://localhost:8000/api/llm_responses/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversation: `http://localhost:8000/api/conversations/${convId}/`,
+        prompt: userInput,
+        raw_response: aiText,
+        final_response: aiText,
+        time: new Date().toISOString(),
+      }),
+    }
+    )
+
+    if (!resp.ok) {
+  const err = await resp.json();
+  console.error("LLM_RESPONSE ERROR:", err);
+}
+
     setChat((prevChat) => [...prevChat, aiMsg]);
     setUserInput("");
     setSelectedFile(null);
@@ -127,6 +179,43 @@ export default function StudentDashboard() {
     setChat([]);
     navigate("/");
   };
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/conversations/")
+      .then((response) => response.json())
+      .then((data) => setConversationList(data))
+      .catch((error) => console.error("Error fetching conversations:", error));
+  }, []);
+
+  const loadConversation = async (id) => {
+    setConversationId(id);
+
+    const data = await fetch(`http://localhost:8000/api/conversations/${id}/`)
+      .then((res) => res.json());
+
+    const loadedChat = [];
+
+    data.questions.forEach((q) => {
+      loadedChat.push({
+        sender: "student",
+        text: q.text,
+        time: new Date(q.timestamp).toLocaleTimeString(),
+      });
+    });
+
+    data.llm_responses.forEach((r) => {
+      loadedChat.push({
+        sender: "ai",
+        text: r.text,
+        time: new Date(r.timestamp).toLocaleTimeString(),
+      });
+    });
+
+    loadedChat.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+    setChat(loadedChat);
+  };
+
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
@@ -152,16 +241,21 @@ export default function StudentDashboard() {
 
           <h3 className="font-semibold mb-2">Chat History</h3>
           <ul className="space-y-1 text-sm text-gray-700">
-            <li className="border rounded px-2 py-1 hover:bg-gray-100 cursor-pointer">
-              History 1
-            </li>
-            <li className="border rounded px-2 py-1 hover:bg-gray-100 cursor-pointer">
-              History 2
-            </li>
-            <li className="border rounded px-2 py-1 hover:bg-gray-100 cursor-pointer">
-              History 3
-            </li>
+            {conversationList.length === 0 && (
+              <li className="text-gray-500 text-sm">No conversations yet</li>
+            )}
+
+            {conversationList.map((conv) => (
+              <li
+                key={conv.id}
+                onClick={() => loadConversation(conv.id)}
+                className="border rounded px-2 py-1 hover:bg-gray-100 cursor-pointer"
+              >
+                {conv.title || `Chat ${conv.id}`}
+              </li>
+            ))}
           </ul>
+
         </div>
 
         {/* Chat + Course/Assignment Area */}
