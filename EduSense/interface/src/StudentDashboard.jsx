@@ -93,6 +93,18 @@ export default function StudentDashboard() {
     setSelectedFile(null);
   };
 
+  const startNewChat = () => {
+    setChat([
+    {
+      sender: "ai",
+      text: "Starting a new conversation. How can I help?",
+      time: new Date().toLocaleTimeString(),
+    },
+  ]);
+  setUserInput("");
+  setSelectedFile(null);
+};
+
   const handleLogout = () => {
     setChat([]);
     navigate("/");
@@ -112,6 +124,13 @@ export default function StudentDashboard() {
               Logout
             </button>
           </div>
+
+          <button
+            onClick={startNewChat}
+            className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+          >
+            + New Chat
+          </button>
 
           <h3 className="font-semibold mb-2">Chat History</h3>
           <ul className="space-y-1 text-sm text-gray-700">
