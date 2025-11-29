@@ -27,6 +27,7 @@ from rest_framework.response import Response as APIResponse
 from rest_framework import status
 from .models import *
 from .serializers import *
+from rest_framework.parsers import MultiPartParser, FormParser
 
 logging.getLogger("markitdown").setLevel(logging.ERROR)
 
@@ -127,7 +128,7 @@ def contains_prompt_injection(text: str) -> bool:
             ollamaLogger.error(f"[Sanitizer] Detected potential prompt injection pattern: '{pattern}' in: {text}")
             return True
    
-
+    return False 
 #logging for better error visibility in terminal
 ollamaLogger = logging.getLogger(__name__)
 
@@ -139,68 +140,90 @@ OLLAMA_DEFAULT_MODEL = 'edusense:latest'  # Set preferred default model here
 
 ######################################## DATABASE ENDPOINTS ########################################
 
-class assignment(ModelViewSet):
+class assignmentViewSet(ModelViewSet):
     """
     Creates an Assignment ModelViewSet to provide CRUD API functionality for accessing the Assignment model
     """
-    queryset = Assignment.objects.all
+    queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
 
-class conversation(ModelViewSet):
+class conversationViewSet(ModelViewSet):
     """
     Creates a Conversation ModelViewSet to provide CRUD API functionality for accessing Conversation model
     """
-    queryset = Conversation.objects.all
+    queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
     
-class course(ModelViewSet):
+    def create(self, request, *args, **kwargs):
+        print("DEBUG Conversation POST data:", request.data)
+        return super().create(request, *args, **kwargs)
+
+    
+class courseViewSet(ModelViewSet):
     """
     Creates a Course  ModelViewSet to provide CRUD API functionality for accessing the Course model
     """
-    queryset = Course.objects.all
+    queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
-class instructor(ModelViewSet):
+class instructorViewSet(ModelViewSet):
     """
     Creates an Instructor ModelViewSet to provide CRUD API functionality for accessing the Instructor model
     """
-    queryset = Instructor.objects.all
+    queryset = Instructor.objects.all()
     serializer_class = InstructorSerializer
 
-class question(ModelViewSet):
+class questionViewSet(ModelViewSet):
     """
     Creates an Question ModelViewSet to provide CRUD API functionality for accessing the Question model
     """
-    queryset = Question.objects.all
+    def create(self, request, *args, **kwargs):
+        print("DEBUG Questions POST data:", request.data)
+        return super().create(request, *args, **kwargs)
+
+    queryset = Question.objects.all()
     serializer_class = QuestionSerializer
 
 class LLM_responseViewSet(ModelViewSet):
     """
     Creates an LLM Response ModelViewSet to provide CRUD API functionality for accessing the LLM Response model
     """
-    queryset = LLM_Response.objects.all
+    queryset = LLM_Response.objects.all()
     serializer_class = ResponseSerializer
 
-class student(ModelViewSet):
+class studentViewSet(ModelViewSet):
     """
     Creates a Student ModelViewSet to provide CRUD API functionality for accessing the Student model
     """
-    queryset = Student.objects.all
+    queryset = Student.objects.all()
     serializer_class = StudentSerializer
 
 
 ########################################### LLM ENDPOINTS ##########################################
 
 class OllamaGenerateView(APIView):
+    parser_classes = (MultiPartParser, FormParser )
     """
     Proxies POST requests from the client to the local Ollama API server.
     """
     def post(self, request, *args, **kwargs):
+        print("FILES RECEIVED:", request.FILES)
+        print(f"[OllamaGenerate] ConvID={request.data.get('conversation_id')}, AssignID={request.data.get('assignment_id')}")
+
+        print("DEBUG RAW request.data:", request.data)
+        print("DEBUG PROMPT TYPE:", type(request.data.get("prompt")))
+        print("DEBUG ASSIGNMENT TYPE:", type(request.data.get("assignment_id")))
+
         try:
             # get prompt data
             ollamaPrompt = request.data.get('prompt')
             # gets model data
             ollamaModel = request.data.get('model', OLLAMA_DEFAULT_MODEL)
+            conversation_id = request.data.get("conversation_id")
+            assignment_id = request.data.get("assignment_id")
+
+            ollamaLogger.info(f"[OllamaGenerate] ConvID={conversation_id}, AssignID={assignment_id}")
+            
             if 'file' in request.FILES:
                 uploaded_file = request.FILES['file']
                 markdown_text = convert_file_to_markdown(uploaded_file)
@@ -213,12 +236,14 @@ class OllamaGenerateView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-            if not ollamaPrompt:
+            if not ollamaPrompt or not ollamaPrompt.strip():
+                ollamaLogger.error(f"Prompt missing or whitespace-only. Received: {repr(ollamaPrompt)}")
                 return APIResponse(
-                    {"error": "A 'prompt' field is required in the request body."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
+                {"error": "A 'prompt' field is required in the request body."},
+                status=status.HTTP_400_BAD_REQUEST
+    )
+
+            print("OLLAMA PROMPT RECEIVED:", ollamaPrompt[:200])
             ollamaPrompt = sanitize_input(ollamaPrompt)
 
             if contains_prompt_injection(ollamaPrompt):

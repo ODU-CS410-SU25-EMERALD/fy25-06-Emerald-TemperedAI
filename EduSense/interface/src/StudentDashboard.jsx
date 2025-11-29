@@ -37,14 +37,70 @@ export default function StudentDashboard() {
     ]);
   }, []);
 
-  async function sendPromptToBackend(prompt, file) {
+  const assignmentFiles = {
+    "Database Concepts HW 5": "/assignments/db_1.docx",
+    "Database Concepts HW 1": "/assignments/db_2.docx",
+    "Philosophy Module 3 HW": "/assignments/phil_1.rtf",
+    "Philosophy Module 11 HW": "/assignments/phil_2.docx",
+    "Statistics Probability Handout 2": "/assignments/stat_1.pdf",
+    "Statistics Estimating Proportions adn Variances Handout": "/assignments/stat_2.pdf",
+  };
+
+  const courseAssignments = {
+    "CS450 DATABASE CONCEPTS": [
+      "Database Concepts HW 5",
+      "Database Concepts HW 1",
+    ],
+    "STAT330 INTRO-PROBABILITY & STAT": [
+      "Statistics Probability Handout 2",
+      "Statistics Estimating Proportions adn Variances Handout",
+    ],
+    "PHIL1000 INTRODUCTION TO PHILOSOPHY": [
+      "Philosophy Module 3 HW",
+      "Philosophy Module 11 HW",
+    ],
+  };
+
+  const assignmentIds = {
+    "Database Concepts HW 1": 1,
+    "Database Concepts HW 5": 2,
+    "Philosophy Module 3 HW": 3,
+    "Philosophy Module 11 HW": 4,
+    "Statistics Probability Handout 2": 5,
+    "Statistics Estimating Proportions adn Variances Handout": 6,
+  };
+
+  const courseIds = {
+    "CS450 DATABASE CONCEPTS": 1,
+    "PHIL1000 INTRODUCTION TO PHILOSOPHY": 2,
+    "STAT330 INTRO-PROBABILITY & STAT": 3,
+  };
+
+  const [assignmentFile, setAssignmentFiles] = useState(null);
+
+
+  async function loadAssignmentFile(path) {
+    const response = await fetch(path);
+    const blob = await response.blob();
+    const filename = path.split("/").pop();
+    return new File([blob], filename);
+  }
+
+  async function sendPromptToBackend(promptText, file, conversationId, assignmentId) {
+    console.log("DEBUG Sending Prompt:", promptText);
+
     try {
       const formData = new FormData();
-      formData.append("prompt", prompt);
+      formData.append("prompt", String(promptText || "Student asked an empty question."));
+      formData.append("conversation_id", String(conversationId));
+      formData.append("assignment_id", String(assignmentId));
 
       if (file) {
+        console.log("DEBUG selectedFile", file);
         formData.append("file", file);
       }
+
+      console.log("WARNING Sending Prompt:", promptText);
 
       const response = await fetch("http://localhost:8000/api/ollama/generate/", {
         method: "POST",
@@ -52,8 +108,17 @@ export default function StudentDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errMsg = "EduSense could not process the request. Please try again.";
+        try {
+          const errJson = await response.json();
+          if (errJson?.error) errMsg = errJson.error;
+        } catch { }
+
+        console.error("OLLAMA ERROR RESPONSE:", errMsg);
+
+        return { error: errMsg };
       }
+
 
       const data = await response.json();
       return (
@@ -71,23 +136,49 @@ export default function StudentDashboard() {
 
   // For now, this only updates the chat visually — no backend call yet
   const sendPrompt = async () => {
+    if (!userInput.trim()) {
+      alert("Please enter a question.");
+      return;
+    }
+
+    if (!selectedCourse) {
+      alert("Please select a course first.");
+      return;
+    }
+
+    if (!selectedAssignment) {
+      alert("Please select an assignment first.");
+      return;
+    }
+
     if (!userInput.trim()) return;
 
     // If starting a new chat, create conversation in backend
     let convId = conversationId;
 
     if (!convId) {
-      const newConv = await fetch("http://localhost:8000/api/conversations/", {
+      const convResponse = await fetch("http://localhost:8000/api/conversations/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: "New Chat",
-          course: selectedCourse,
-          assignment: selectedAssignment,
+          assignment: assignmentIds[selectedAssignment],
+          student: 1,  // temp hardcoded student
         }),
-      }).then((res) => res.json());
+      });
 
-      convId = newConv.id;
+      const convData = await convResponse.json();
+      console.log("CONVERSATION CREATE RESPONSE:", convData);
+
+      if (!convResponse.ok) {
+        alert("Conversation failed: " + JSON.stringify(convData));
+        return;
+      }
+
+      // Your model uses conversation_id, NOT id
+      convId = convData.conversation_id;
+
+      // Save to React state (updates next render)
       setConversationId(convId);
     }
 
@@ -106,16 +197,13 @@ export default function StudentDashboard() {
       body: JSON.stringify({
         question_text: userInput,
         answer: "",
-        assignment: selectedAssignment,
+        assignment: assignmentIds[selectedAssignment],
         conversation: convId,
       }),
     }
     )
 
-    const updatedHistory = [
-      ...chat,
-      studentMsg
-    ].slice(-12); // Limit to last 12 messages for context
+    const updatedHistory = [...chat, studentMsg]; // Limit to last 12 messages for context
 
     const historyText = updatedHistory
       .map((msg) => `${msg.sender === "student" ? "Student" : "AI"}: ${msg.text}`)
@@ -132,7 +220,8 @@ export default function StudentDashboard() {
     ${userInput}
     `;
 
-    const aiText = await sendPromptToBackend(promptToSend, selectedFile);
+    const fileToSend = selectedFile || assignmentFile;
+    const aiText = await sendPromptToBackend(promptToSend, fileToSend, convId, assignmentIds[selectedAssignment]);
 
     const aiMsg = {
       sender: "ai",
@@ -140,27 +229,23 @@ export default function StudentDashboard() {
       time: new Date().toLocaleTimeString(),
     };
 
-    await fetch('http://localhost:8000/api/llm_responses/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    await fetch("http://localhost:8000/api/llm_responses/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        conversation: `http://localhost:8000/api/conversations/${convId}/`,
-        prompt: userInput,
+        prompt: promptToSend,
         raw_response: aiText,
         final_response: aiText,
         time: new Date().toISOString(),
+        conversation: convId
       }),
-    }
-    )
+    });
 
-    if (!resp.ok) {
-  const err = await resp.json();
-  console.error("LLM_RESPONSE ERROR:", err);
-}
 
     setChat((prevChat) => [...prevChat, aiMsg]);
     setUserInput("");
-    setSelectedFile(null);
+    //setSelectedFile(null);
+
   };
 
   const startNewChat = () => {
@@ -198,7 +283,7 @@ export default function StudentDashboard() {
     data.questions.forEach((q) => {
       loadedChat.push({
         sender: "student",
-        text: q.text,
+        text: q.question_text,
         time: new Date(q.timestamp).toLocaleTimeString(),
       });
     });
@@ -247,11 +332,11 @@ export default function StudentDashboard() {
 
             {conversationList.map((conv) => (
               <li
-                key={conv.id}
-                onClick={() => loadConversation(conv.id)}
+                key={conv.conversation_id}
+                onClick={() => loadConversation(conv.conversation_id)}
                 className="border rounded px-2 py-1 hover:bg-gray-100 cursor-pointer"
               >
-                {conv.title || `Chat ${conv.id}`}
+                {conv.title || `Chat ${conv.conversation_id}`}
               </li>
             ))}
           </ul>
@@ -273,18 +358,16 @@ export default function StudentDashboard() {
                   onChange={(e) => setSelectedCourse(e.target.value)}
                 >
                   <option value="">Choose a course</option>
-                  <option value="CS252 INTRO TO UNIX FOR PROGRAMMERS">
-                    CS252 INTRO TO UNIX FOR PROGRAMMERS
+                  <option value="CS450 DATABASE CONCEPTS">
+                    CS450 DATABASE CONCEPTS
                   </option>
-                  <option value="CS381 INTRO TO DISCRETE STRUCTURES">
-                    CS381 INTRO TO DISCRETE STRUCTURES
+                  <option value="PHIL1000 INTRODUCTION TO PHILOSOPHY">
+                    PHIL1000 INTRODUCTION TO PHILOSOPHY
                   </option>
                   <option value="STAT330 INTRO-PROBABILITY & STAT">
                     STAT330 INTRO-PROBABILITY & STAT
                   </option>
-                  <option value="CS463 CRYPTOGRAPHY FOR CYBERSECURITY">
-                    CS463 CRYPTOGRAPHY FOR CYBERSECURITY
-                  </option>
+
                 </select>
               </div>
 
@@ -295,14 +378,27 @@ export default function StudentDashboard() {
                 <select
                   className="border rounded-md px-3 py-2"
                   value={selectedAssignment}
-                  onChange={(e) => setSelectedAssignment(e.target.value)}
+                  onChange={async (e) => {
+                    const assignment = e.target.value;
+                    setSelectedAssignment(assignment);
+                    const filePath = assignmentFiles[assignment];
+                    if (filePath) {
+                      console.log("Loading file for assignment:", filePath);
+                      const file = await loadAssignmentFile(filePath);
+                      console.log("File loaded:", file);
+                      setSelectedFile(file);
+
+                    }
+                  }}
+                  disabled={!selectedCourse}
                 >
                   <option value="">Choose an assignment</option>
-                  <option value="Prototype 1">Prototype 1</option>
-                  <option value="CIQ Journal">CIQ Journal</option>
-                  <option value="ADTs: Working with Classes">
-                    ADTs: Working with Classes
-                  </option>
+                  {selectedCourse &&
+                    courseAssignments[selectedCourse]?.map((assignment) => (
+                      <option key={assignment} value={assignment}>
+                        {assignment}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>

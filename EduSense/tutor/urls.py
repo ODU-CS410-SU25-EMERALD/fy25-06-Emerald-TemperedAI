@@ -17,13 +17,13 @@ app_name = 'tutor'
 # create router and register all ModelViewSets for CRUD endpoints.
 # paths defined here (e.g., 'assignments') are the final endpoint paths.
 router = DefaultRouter()
-router.register(r'assignments', views.assignment, basename='assignment')
-router.register(r'conversations', views.conversation, basename='conversation')
-router.register(r'courses', views.course, basename='course')
-router.register(r'instructors', views.instructor, basename='instructor')
-router.register(r'questions', views.question, basename='question')
+router.register(r'assignments', views.assignmentViewSet, basename='assignment')
+router.register(r'conversations', views.conversationViewSet, basename='conversation')
+router.register(r'courses', views.courseViewSet, basename='course')
+router.register(r'instructors', views.instructorViewSet, basename='instructor')
+router.register(r'questions', views.questionViewSet, basename='question')
 router.register(r'llm_responses', views.LLM_responseViewSet, basename='llm_response')
-router.register(r'students', views.student, basename='student')
+router.register(r'students', views.studentViewSet, basename='student')
 
 # API URLs now determined automatically by router.
 urlpatterns = [
