@@ -20,7 +20,7 @@
           Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
           .\.venv\Scripts\Activate.ps1
    4. Note: venv should be active
-   5. Note: If system dependancies change, the next step will need to be reperformed with the updated requirements.txt
+   5. Note: If system dependencies change, the next step will need to be reperformed with the updated requirements.txt
    6. Run:
           pip install -r requirements.txt
           scoop install caddy cloudflared (if not already installed)
