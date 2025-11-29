@@ -27,7 +27,7 @@ from rest_framework.response import Response as APIResponse
 from rest_framework import status
 from .models import *
 from .serializers import *
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 logging.getLogger("markitdown").setLevel(logging.ERROR)
 
@@ -202,7 +202,7 @@ class studentViewSet(ModelViewSet):
 ########################################### LLM ENDPOINTS ##########################################
 
 class OllamaGenerateView(APIView):
-    parser_classes = (MultiPartParser, FormParser )
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
     """
     Proxies POST requests from the client to the local Ollama API server.
     """

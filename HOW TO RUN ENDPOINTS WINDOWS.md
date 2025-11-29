@@ -20,16 +20,16 @@ For more information on production servers see: https://docs.djangoproject.com/e
 
 
 - *** Ensure Ollama is running (icon in task bar) ***
-IF NOT RUN:              ollama run edusense:latest
-
+IF NOT RUN:                                       ollama run edusense:latest
+FOR EXAMPLE, FOR lama3.1:8b-instruct-q5_K_M RUN:  ollama run llama3.1:8b-instruct-q5_K_M
 
 
 - *** SEND PROMPT TO DJANGO (general prompt) *** --> **ADDING 'Answer only' TO PROMPT SIGNIFICANTLY SPEEDS UP RESPONSE**
-curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/ ^
+curl -X POST http://127.0.0.1:8000/api/ollama/generate/ ^
      -H "Content-Type: application/json" ^
      -d "{\"prompt\": \"YOUR PROMPT HERE.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"  
 
-- *** EXAMPLE: ***
+- *** EXAMPLE: *** (might need to remove tutor part of URLs below)
  curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/ ^
      -H "Content-Type: application/json" ^
      -d "{\"prompt\": \"What is 2+2, answer only.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"

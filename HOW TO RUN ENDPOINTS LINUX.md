@@ -37,19 +37,20 @@ For more information on production servers see: https://docs.djangoproject.com/e
 
 
 - *** Ensure Ollama is running (icon in task bar) ***
-IF NOT RUN:              ollama run edusense:latest
+IF NOT RUN:                                       ollama run edusense:latest
+FOR EXAMPLE, FOR lama3.1:8b-instruct-q5_K_M RUN:  ollama run llama3.1:8b-instruct-q5_K_M
 
 
 
 - *** SEND PROMPT TO DJANGO (general prompt) *** --> **ADDING 'Answer only' TO PROMPT SIGNIFICANTLY SPEEDS UP RESPONSE**
-curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/  -H "Content-Type: application/json" -d "{\"prompt\": \"YOUR PROMPT HERE.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"  
+curl -X POST http://127.0.0.1:8000/api/ollama/generate/  -H "Content-Type: application/json" -d "{\"prompt\": \"YOUR PROMPT HERE.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"  
 
 - *** EXAMPLE: ***
-curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/  -H "Content-Type: application/json" -d "{\"prompt\": \"YOUR PROMPT HERE.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"
+curl -X POST http://127.0.0.1:8000/api/ollama/generate/  -H "Content-Type: application/json" -d "{\"prompt\": \"What is 2+2?\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"
 
-curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/  -H "Content-Type: application/json" -d "{\"prompt\": \"What is the space and time complexity of a ten times nested for loop in C++. Answer only.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"    
+curl -X POST http://127.0.0.1:8000/api/tutor/ollama/generate/  -H "Content-Type: application/json" -d "{\"prompt\": \"What is the space and time complexity of a ten times nested for loop in C++? Answer only.\", \"model\": \"llama3.1:8b-instruct-q5_K_M\"}"    
 
-*** Only receive response back from the LLM***
+*** Only receive response back from the LLM *** (might need to remove tutor part of URL below)
 Use this when you only want to see the prompt returned instead of the full JSON
 
 (Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/tutor/ollama/generate/" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body '{"prompt": "What is 2+2", "model": "edusense:latest"}').Content | ConvertFrom-Json | Select-Object -ExpandProperty response
