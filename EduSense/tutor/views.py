@@ -134,7 +134,7 @@ ollamaLogger = logging.getLogger(__name__)
 
 # Ollama Config
 OLLAMA_API_URL = 'http://localhost:11434/api/generate' # Local Ollama API URL
-OLLAMA_DEFAULT_MODEL = 'edusense:latest'  # Set preferred default model here
+OLLAMA_DEFAULT_MODEL = 'edusense_testing:latest'  # Set preferred default model here
 
 
 
@@ -255,6 +255,10 @@ class OllamaGenerateView(APIView):
     )
 
             print("OLLAMA PROMPT RECEIVED:", ollamaPrompt[:200])
+
+            print("|||||||||||||||||")
+            print("OLLAM MODEL RECEIVED:", ollamaModel)
+            print("|||||||||||||||||")
            
             if "```" in ollamaPrompt:
                 user_part, assignment_part = ollamaPrompt.split("```", 1)

@@ -275,6 +275,7 @@ export default function StudentDashboard() {
   };
 
   const startNewChat = () => {
+    setConversationId(null);
     setChat([
       {
         sender: "ai",
