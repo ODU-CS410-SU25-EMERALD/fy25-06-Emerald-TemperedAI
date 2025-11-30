@@ -35,10 +35,15 @@ class Conversation(models.Model):
     #Model Fields
     conversation_id = models.AutoField(primary_key=True)
     student = models.ForeignKey('Student', models.CASCADE)
-    assignment = models.ForeignKey(Assignment, models.CASCADE)
+    assignment = models.ForeignKey(
+        Assignment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
     #Defines Model as String
     def __str__(self):
-        return self.name
+        return f"Conversation {self.conversation_id}"
     #Model Metadata
     class Meta:
         ordering = ['conversation_id']
@@ -90,8 +95,9 @@ class Question(models.Model):
     question_id = models.AutoField(primary_key=True)
     question_text = models.TextField()
     answer = models.TextField(blank=True, null=True)
-    assignment = models.ForeignKey(Assignment, models.CASCADE)
+    assignment = models.ForeignKey(Assignment, models.CASCADE, null=True, blank=True)
     conversation = models.ForeignKey(Conversation, models.DO_NOTHING, blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     #Defines Model as String
     def __str__(self):
         return self.question_text
@@ -113,6 +119,7 @@ class LLM_Response(models.Model):
     final_response = models.TextField()
     time = models.TextField()
     conversation = models.ForeignKey(Conversation, models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
     #Defines Model as String
     def __str__(self):
         return self.prompt

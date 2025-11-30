@@ -25,7 +25,11 @@ class InstructorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class QuestionSerializer(serializers.ModelSerializer):
-    assignment = serializers.PrimaryKeyRelatedField(queryset=Assignment.objects.all())
+    assignment = serializers.PrimaryKeyRelatedField(
+        queryset=Assignment.objects.all(),
+        allow_null=True,
+        required=False
+    )
     conversation = serializers.PrimaryKeyRelatedField(
         queryset=Conversation.objects.all(),
         allow_null=True,
@@ -46,6 +50,12 @@ class ConversationSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True, read_only=True, source='question_set')
     llm_responses = ResponseSerializer(many=True, read_only=True, source='llm_response_set')
     
+    assignment = serializers.PrimaryKeyRelatedField(
+        queryset=Assignment.objects.all(),
+        allow_null=True,
+        required=False
+    )
+
     class Meta:
         model = Conversation
         fields = [

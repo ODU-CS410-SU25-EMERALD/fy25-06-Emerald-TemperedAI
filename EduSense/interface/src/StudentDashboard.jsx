@@ -42,7 +42,7 @@ export default function StudentDashboard() {
   const assignmentFiles = {
     "Database Concepts HW 5": "/assignments/db_1.docx",
     "Database Concepts HW 1": "/assignments/db_2.docx",
-    "Philosophy Module 3 HW": "/assignments/phil_1.rtf",
+    "Philosophy Module 3 HW": "/assignments/phil_1.docx",
     "Philosophy Module 11 HW": "/assignments/phil_2.docx",
     "Statistics Probability Handout 2": "/assignments/stat_1.pdf",
     "Statistics Estimating Proportions adn Variances Handout": "/assignments/stat_2.pdf",
@@ -95,7 +95,11 @@ export default function StudentDashboard() {
       const formData = new FormData();
       formData.append("prompt", String(promptText || "Student asked an empty question."));
       formData.append("conversation_id", String(conversationId));
-      formData.append("assignment_id", String(assignmentId));
+      if (assignmentId !== null && assignmentId !== undefined) {
+        formData.append("assignment_id", String(assignmentId));
+      } else {
+        formData.append("assignment_id", "");
+      }
 
       if (file) {
         console.log("DEBUG selectedFile", file);
@@ -153,10 +157,6 @@ export default function StudentDashboard() {
       return;
     }
 
-    if (!selectedAssignment) {
-      alert("Please select an assignment first.");
-      return;
-    }
 
     if (!userInput.trim()) return;
 
@@ -169,7 +169,7 @@ export default function StudentDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: "New Chat",
-          assignment: assignmentIds[selectedAssignment],
+          assignment: selectedAssignment ? assignmentIds[selectedAssignment] : null,
           student: 1,  // temp hardcoded student
         }),
       });
@@ -204,7 +204,7 @@ export default function StudentDashboard() {
       body: JSON.stringify({
         question_text: userInput,
         answer: "",
-        assignment: assignmentIds[selectedAssignment],
+        assignment: selectedAssignment ? assignmentIds[selectedAssignment] : null,
         conversation: convId,
       }),
     }
@@ -218,7 +218,7 @@ export default function StudentDashboard() {
 
     const promptToSend = [
       `Course: ${selectedCourse}`,
-      `Assignment: ${selectedAssignment}`,
+      `Assignment: ${selectedAssignment || "None Selected"}`,
       ``,
       `Conversation History:`,
       historyText,
@@ -228,7 +228,12 @@ export default function StudentDashboard() {
     ].join("\n");
 
     const fileToSend = selectedFile ? selectedFile : assignmentFile;
-    const aiText = await sendPromptToBackend(promptToSend, fileToSend, convId, assignmentIds[selectedAssignment]);
+    const aiText = await sendPromptToBackend(
+      promptToSend,
+      fileToSend,
+      convId,
+      selectedAssignment ? assignmentIds[selectedAssignment] : null
+    );
 
     if (aiText && aiText.error) {
       const errorMsg = {
@@ -322,9 +327,29 @@ export default function StudentDashboard() {
     setChat(loadedChat);
   };
 
+  async function deleteConversation(id) {
+    if (!window.confirm("Delete this chat?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/conversations/${id}/`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setConversationList(conversationList.filter(c => c.conversation_id !== id));
+        setChat([{ sender: "ai", text: "Chat deleted.", time: new Date().toLocaleTimeString() }]);
+        setConversationId(null);
+      } else {
+        alert("Failed to delete chat");
+      }
+    } catch (err) {
+      console.error("Error deleting:", err);
+    }
+  }
+
 
   return (
-    
+
     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
       <div className="flex w-11/12 h-5/6 rounded-2xl shadow-xl overflow-hidden bg-white/70 backdrop-blur-md">
         {/* Sidebar */}
@@ -347,7 +372,7 @@ export default function StudentDashboard() {
           </button>
 
           <h3 className="font-semibold mb-2">Chat History</h3>
-          <ul className="space-y-1 text-sm text-gray-700">
+          <ul className="space-y-1 text-sm text-gray-700 overflow-y-auto max-h-[60vh] pr-1">
             {conversationList.length === 0 && (
               <li className="text-gray-500 text-sm">No conversations yet</li>
             )}
@@ -355,11 +380,26 @@ export default function StudentDashboard() {
             {conversationList.map((conv) => (
               <li
                 key={conv.conversation_id}
-                onClick={() => loadConversation(conv.conversation_id)}
-                className="border rounded px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                className="border rounded px-2 py-1 hover:bg-gray-100 flex justify-between items-center"
               >
-                {conv.title || `Chat ${conv.conversation_id}`}
+                <span
+                  onClick={() => loadConversation(conv.conversation_id)}
+                  className="flex-grow cursor-pointer"
+                >
+                  {conv.title || `Chat ${conv.conversation_id}`}
+                </span>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(conv.conversation_id);
+                  }}
+                  className="ml-3 text-red-500 hover:text-red-700 font-bold"
+                >
+                  ✕
+                </button>
               </li>
+
             ))}
           </ul>
 
@@ -404,19 +444,20 @@ export default function StudentDashboard() {
                     const assignment = e.target.value;
                     setSelectedAssignment(assignment);
                     const filePath = assignmentFiles[assignment];
-                    if (filePath) {
+
+                    if (assignment && filePath) {
                       setFileLoading(true);
-                      console.log("Loading file for assignment:", filePath);
                       const file = await loadAssignmentFile(filePath);
-                      console.log("File loaded:", file);
                       setAssignmentFiles(file);
                       setFileLoading(false);
+                    } else {
+                      setAssignmentFiles(null); // clear old file
                     }
-
                   }}
+
                   disabled={!selectedCourse}
                 >
-                  <option value="">Choose an assignment</option>
+                  <option value="">No assignment</option>
                   {selectedCourse &&
                     courseAssignments[selectedCourse]?.map((assignment) => (
                       <option key={assignment} value={assignment}>
@@ -436,7 +477,7 @@ export default function StudentDashboard() {
             )}
           </div>
 
-          {assignmentFile && <span style={{display:"none"}}>{assignmentFile.name}</span>}
+          {assignmentFile && <span style={{ display: "none" }}>{assignmentFile.name}</span>}
 
 
           {/* Chat Area */}
