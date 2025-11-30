@@ -210,7 +210,7 @@ export default function StudentDashboard() {
     }
     )
 
-    const updatedHistory = [...chat, studentMsg]; // Limit to last 12 messages for context
+    const updatedHistory = [...chat, studentMsg].slice(-12); // Limit to last 12 messages for context
 
     const historyText = updatedHistory
       .map((msg) => `${msg.sender === "student" ? "Student" : "AI"}: ${msg.text}`)
@@ -486,7 +486,7 @@ export default function StudentDashboard() {
           <div className="flex-1 p-6 overflow-y-auto">
             {chat.length === 0 ? (
               <p className="text-center text-gray-500 mt-10">
-                Welcome back. Select a course and assignment to get started.
+                Welcome back. Select a course to get started.
               </p>
             ) : (
               chat.map((msg, i) => (
@@ -524,6 +524,13 @@ export default function StudentDashboard() {
               placeholder="Ask a question..."
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" ){
+                  e.preventDefault();
+                  sendPrompt();
+                }
+
+              }}
             />
 
             <button
