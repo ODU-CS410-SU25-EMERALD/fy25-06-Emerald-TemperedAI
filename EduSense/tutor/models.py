@@ -96,7 +96,7 @@ class Question(models.Model):
     question_text = models.TextField()
     answer = models.TextField(blank=True, null=True)
     assignment = models.ForeignKey(Assignment, models.CASCADE, null=True, blank=True)
-    conversation = models.ForeignKey(Conversation, models.DO_NOTHING, blank=True, null=True)
+    conversation = models.ForeignKey(Conversation, models.CASCADE, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     #Defines Model as String
     def __str__(self):

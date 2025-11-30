@@ -311,18 +311,20 @@ export default function StudentDashboard() {
         sender: "student",
         text: q.question_text,
         time: new Date(q.timestamp).toLocaleTimeString(),
+        sortTime: q.timestamp,
       });
     });
 
     data.llm_responses.forEach((r) => {
       loadedChat.push({
         sender: "ai",
-        text: r.text,
+        text: r.final_response,
         time: new Date(r.timestamp).toLocaleTimeString(),
+        sortTime: r.timestamp,
       });
     });
 
-    loadedChat.sort((a, b) => new Date(a.time) - new Date(b.time));
+    loadedChat.sort((a, b) => new Date(a.sortTime) - new Date(b.sortTime));
 
     setChat(loadedChat);
   };
