@@ -219,22 +219,33 @@ class OllamaGenerateView(APIView):
             ollamaPrompt = request.data.get('prompt')
             # gets model data
             ollamaModel = request.data.get('model', OLLAMA_DEFAULT_MODEL)
-            conversation_id = request.data.get("conversation_id")
-            assignment_id = request.data.get("assignment_id")
+            conversation_id = request.data.get("conversation") or request.data.get("conversation_id")
+            assignment_id = request.data.get("assignment") or request.data.get("assignment_id")
 
             ollamaLogger.info(f"[OllamaGenerate] ConvID={conversation_id}, AssignID={assignment_id}")
             
             if 'file' in request.FILES:
                 uploaded_file = request.FILES['file']
                 markdown_text = convert_file_to_markdown(uploaded_file)
-                if markdown_text:
-                    # Append converted Markdown to any existing prompt
-                    ollamaPrompt = (ollamaPrompt or "") + "\n\n---\n\n" + markdown_text
+                if markdown_text is not None:
+                    markdown_text = markdown_text.strip()
+                    assignment_block = (
+                        "\n\n### Assignment Document (Safe Attachment)\n"
+                        "```\n"
+                        f"{markdown_text}\n"
+                        "```\n"
+                    )
+                    ollamaPrompt = f"{(ollamaPrompt or '').strip()}{assignment_block}"
                 else:
                     return APIResponse(
                         {"error": "Failed to convert file to Markdown."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
+                
+            print("FULL PROMPT AFTER MARKDOWN")
+            print(ollamaPrompt)
+            print("END OF FULL PROMPT AFTER MARKDOWN")
+
 
             if not ollamaPrompt or not ollamaPrompt.strip():
                 ollamaLogger.error(f"Prompt missing or whitespace-only. Received: {repr(ollamaPrompt)}")
@@ -244,11 +255,19 @@ class OllamaGenerateView(APIView):
     )
 
             print("OLLAMA PROMPT RECEIVED:", ollamaPrompt[:200])
-            ollamaPrompt = sanitize_input(ollamaPrompt)
+           
+            if "```" in ollamaPrompt:
+                user_part, assignment_part = ollamaPrompt.split("```", 1)
+                user_part = sanitize_input(user_part)
 
-            if contains_prompt_injection(ollamaPrompt):
-                ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")
-                ollamaPrompt = "[User tried to override system instructions — sanitized.]"
+                ollamaPrompt = user_part + "```" + assignment_part
+            else:
+                ollamaPrompt = sanitize_input(ollamaPrompt)
+
+                if contains_prompt_injection(ollamaPrompt):
+                    ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")
+                    ollamaPrompt = "[User tried to override system instructions — sanitized.]"
+
 
         # be more specific with error handling
         except Exception as e:

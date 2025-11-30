@@ -25,6 +25,8 @@ export default function StudentDashboard() {
   const [conversationId, setConversationId] = useState(null);
   const [conversationList, setConversationList] = useState([]);
   const navigate = useNavigate();
+  const [fileLoading, setFileLoading] = useState(false);
+
 
   // Display a welcome message on load
   useEffect(() => {
@@ -136,6 +138,11 @@ export default function StudentDashboard() {
 
   // For now, this only updates the chat visually — no backend call yet
   const sendPrompt = async () => {
+    if (fileLoading) {
+      alert("Please wait, assignment file is still loading...");
+      return;
+    }
+
     if (!userInput.trim()) {
       alert("Please enter a question.");
       return;
@@ -209,19 +216,33 @@ export default function StudentDashboard() {
       .map((msg) => `${msg.sender === "student" ? "Student" : "AI"}: ${msg.text}`)
       .join("\n");
 
-    const promptToSend = `
-    Course: ${selectedCourse}
-    Assignment: ${selectedAssignment}
+    const promptToSend = [
+      `Course: ${selectedCourse}`,
+      `Assignment: ${selectedAssignment}`,
+      ``,
+      `Conversation History:`,
+      historyText,
+      ``,
+      `Student's New Question:`,
+      userInput
+    ].join("\n");
 
-    Conversation History:
-    ${historyText}
-
-    Student's New Question:
-    ${userInput}
-    `;
-
-    const fileToSend = selectedFile || assignmentFile;
+    const fileToSend = selectedFile ? selectedFile : assignmentFile;
     const aiText = await sendPromptToBackend(promptToSend, fileToSend, convId, assignmentIds[selectedAssignment]);
+
+    if (aiText && aiText.error) {
+      const errorMsg = {
+        sender: "ai",
+        text: aiText.error,
+        time: new Date().toLocaleTimeString(),
+      };
+
+      setChat((prevChat) => [...prevChat, errorMsg]);
+      setUserInput("");
+
+      return;
+    }
+
 
     const aiMsg = {
       sender: "ai",
@@ -303,6 +324,7 @@ export default function StudentDashboard() {
 
 
   return (
+    
     <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
       <div className="flex w-11/12 h-5/6 rounded-2xl shadow-xl overflow-hidden bg-white/70 backdrop-blur-md">
         {/* Sidebar */}
@@ -383,12 +405,14 @@ export default function StudentDashboard() {
                     setSelectedAssignment(assignment);
                     const filePath = assignmentFiles[assignment];
                     if (filePath) {
+                      setFileLoading(true);
                       console.log("Loading file for assignment:", filePath);
                       const file = await loadAssignmentFile(filePath);
                       console.log("File loaded:", file);
-                      setSelectedFile(file);
-
+                      setAssignmentFiles(file);
+                      setFileLoading(false);
                     }
+
                   }}
                   disabled={!selectedCourse}
                 >
@@ -411,6 +435,9 @@ export default function StudentDashboard() {
               </p>
             )}
           </div>
+
+          {assignmentFile && <span style={{display:"none"}}>{assignmentFile.name}</span>}
+
 
           {/* Chat Area */}
           <div className="flex-1 p-6 overflow-y-auto">
@@ -442,7 +469,6 @@ export default function StudentDashboard() {
           {/* Input Area */}
           <div className="p-4 border-t flex gap-2 items-center">
             <input
-              key={selectedFile ? selectedFile.name : "empty"}
               type="file"
               onChange={(e) => setSelectedFile(e.target.files[0])}
               className="border rounded-md p-2"

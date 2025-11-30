@@ -13,14 +13,6 @@ class AssignmentSerializer(serializers.ModelSerializer):
         model = Assignment
         fields = '__all__'
 
-class ConversationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Conversation
-        fields = [
-            'conversation_id',
-            'student',
-            'assignment'
-        ]
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,6 +41,21 @@ class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = LLM_Response
         fields = '__all__'
+
+class ConversationSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True, source='question_set')
+    llm_responses = ResponseSerializer(many=True, read_only=True, source='llm_response_set')
+    
+    class Meta:
+        model = Conversation
+        fields = [
+            'conversation_id',
+            'student',
+            'assignment',
+            'questions',
+            'llm_responses',
+        ]
+
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
