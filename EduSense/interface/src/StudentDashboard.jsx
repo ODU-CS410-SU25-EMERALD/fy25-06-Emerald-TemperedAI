@@ -78,6 +78,14 @@ export default function StudentDashboard() {
     "STAT330 INTRO-PROBABILITY & STAT": 3,
   };
 
+  const assignmentToCourse = Object.keys(courseAssignments).reduce((map, courseName) => {
+    courseAssignments[courseName].forEach(a => {
+      map[a] = courseName;
+    });
+    return map;
+  }, {});
+
+
   const [assignmentFile, setAssignmentFiles] = useState(null);
 
 
@@ -143,7 +151,7 @@ export default function StudentDashboard() {
   // For now, this only updates the chat visually — no backend call yet
   const sendPrompt = async () => {
     setUserInput("");
-    
+
     if (fileLoading) {
       alert("Please wait, assignment file is still loading...");
       return;
@@ -329,6 +337,19 @@ export default function StudentDashboard() {
     loadedChat.sort((a, b) => new Date(a.sortTime) - new Date(b.sortTime));
 
     setChat(loadedChat);
+
+    const assignmentName = Object.keys(assignmentIds)
+      .find(name => assignmentIds[name] === data.assignment);
+
+    setSelectedAssignment(assignmentName || "");
+
+    const courseName = assignmentToCourse[assignmentName];
+    setSelectedCourse(courseName);
+
+    if (assignmentName && assignmentFiles[assignmentName]) {
+      const file = await loadAssignmentFile(assignmentFiles[assignmentName]);
+      setAssignmentFiles(file);
+    }
   };
 
   async function deleteConversation(id) {
@@ -527,7 +548,7 @@ export default function StudentDashboard() {
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" ){
+                if (e.key === "Enter") {
                   e.preventDefault();
                   sendPrompt();
                 }
