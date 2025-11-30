@@ -142,6 +142,8 @@ export default function StudentDashboard() {
 
   // For now, this only updates the chat visually — no backend call yet
   const sendPrompt = async () => {
+    setUserInput("");
+    
     if (fileLoading) {
       alert("Please wait, assignment file is still loading...");
       return;
@@ -243,7 +245,6 @@ export default function StudentDashboard() {
       };
 
       setChat((prevChat) => [...prevChat, errorMsg]);
-      setUserInput("");
 
       return;
     }
