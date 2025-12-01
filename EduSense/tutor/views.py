@@ -275,6 +275,27 @@ class OllamaGenerateView(APIView):
 
 
         # be more specific with error handling
+        except KeyError as e:
+            ollamaLogger.error(f"Missing required field in request data: {e}")
+            return APIResponse(
+                {"error": f"Missing required field: {e}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        except ValueError as e:
+            ollamaLogger.error(f"Invalid value in request data: {e}")
+            return APIResponse(
+                {"error": f"Invalid value: {e}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        except TypeError as e:
+            ollamaLogger.error(f"Type error in request data: {e}")
+            return APIResponse(
+                {"error": f"Type error: {e}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         except Exception as e:
             ollamaLogger.error(f"Error parsing request data: {e}")
             return APIResponse(
