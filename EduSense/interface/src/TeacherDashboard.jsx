@@ -29,6 +29,7 @@ export default function TeacherDashboard() {
   const [dueDate, setDueDate] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [llmModel, setLlmModel] = useState("edusense_testing:latest");
+  const [newCourseName, setNewCourseName] = useState("");
 
   const [teacherId, setTeacherId] = useState(() => {
     // Retrieve the email saved by the Login screen
@@ -37,7 +38,7 @@ export default function TeacherDashboard() {
 
   useEffect(() => {
     if (!teacherId) return;
-    fetch("http://localhost:8000/api/courses/?teacher_email=${teacherId}")
+    fetch(`http://localhost:8000/api/courses/?teacher_email=${teacherId}`)
       .then(res => res.json())
       .then(data => {
         console.log("Fetched courses:", data);
@@ -94,6 +95,35 @@ export default function TeacherDashboard() {
         alert("Assignment created!");
       })
       .catch((err) => console.error("Error creating assignment:", err));
+  };
+
+  const createCourse = () => {
+    if (!newCourseName.trim()) {
+      alert("Please enter a course name.");
+      return;
+    }
+
+    const payload = {
+      name: newCourseName,
+      settings: "",
+      teacher_email: teacherId
+    };
+
+    fetch("http://localhost:8000/api/courses/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload)
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Created course:", data);
+        setCourses([...courses, data]);
+        setNewCourseName("");
+        alert("Course created!");
+      })
+      .catch((err) => console.error("Error creating course:", err));
   };
 
 
@@ -240,11 +270,41 @@ export default function TeacherDashboard() {
           </>
         )}
         {mode === "course" && (
-          <div className="text-center text-gray-700">
-            <h2 className="text-xl font-semibold mb-4">Course Creation Coming Soon</h2>
-            <p className="text-sm">Mode switching works</p>
+          <div className="space-y-4 text-gray-700">
+            
+            <h2 className="text-xl font-semibold mb-2">Create New Course</h2>
+
+            <div>
+              <label className="block font-semibold mb-1">Course Name</label>
+              <input
+                type="text"
+                className="w-full border rounded-md px-3 py-2"
+                placeholder="Enter course name"
+                value={newCourseName}
+                onChange={(e) => setNewCourseName(e.target.value)}
+              />
+            </div>
+
+            <button
+              onClick={createCourse}
+              className="w-full bg-[#F0EAD8]/80 text-[#4a3f35] font-semibold py-2 rounded-lg shadow-md hover:bg-[#F0EAD8]/90">
+              Create Course
+            </button>
+
+            <div className="mt-6">
+              <h3 className="test-lg font-semibold mb-2">Your Courses</h3>
+              <ul className="space-y-1 text-sm">
+                {courses.length ===0 && (
+                  <p className="italic text-gray-500">No courses found.</p>
+                )}
+                {courses.map(c => (
+                  <li key={c.course_id}>• {c.name}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
+        
         {mode === "analytics" && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold border-b pb-2">Course Performance Overview</h2>
