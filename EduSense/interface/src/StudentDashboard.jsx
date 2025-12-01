@@ -317,213 +317,232 @@ export default function StudentDashboard() {
     setSelectedCourse(data.course);
     setAssignmentFiles(null); // DB assignments have no files (yet)
 
-};
+  };
 
-async function deleteConversation(id) {
-  if (!window.confirm("Delete this chat?")) return;
+  async function deleteConversation(id) {
+    if (!window.confirm("Delete this chat?")) return;
 
-  try {
-    const response = await fetch(`http://localhost:8000/api/conversations/${id}/`, {
-      method: "DELETE",
-    });
+    try {
+      const response = await fetch(`http://localhost:8000/api/conversations/${id}/`, {
+        method: "DELETE",
+      });
 
-    if (response.ok) {
-      setConversationList(conversationList.filter(c => c.conversation_id !== id));
-      setChat([{ sender: "ai", text: "Chat deleted.", time: new Date().toLocaleTimeString() }]);
-      setConversationId(null);
-    } else {
-      alert("Failed to delete chat");
+      if (response.ok) {
+        setConversationList(conversationList.filter(c => c.conversation_id !== id));
+        setChat([{ sender: "ai", text: "Chat deleted.", time: new Date().toLocaleTimeString() }]);
+        setConversationId(null);
+      } else {
+        alert("Failed to delete chat");
+      }
+    } catch (err) {
+      console.error("Error deleting:", err);
     }
-  } catch (err) {
-    console.error("Error deleting:", err);
   }
-}
 
 
-return (
+  return (
 
-  <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
-    <div className="flex w-11/12 h-5/6 rounded-2xl shadow-xl overflow-hidden bg-white/70 backdrop-blur-md">
-      {/* Sidebar */}
-      <div className="w-64 border-r p-4 flex flex-col gap-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold">EduSense</h1>
-          <button
-            onClick={handleLogout}
-            className="px-3 py-1 border rounded-md hover:bg-gray-100 text-sm"
-          >
-            Logout
-          </button>
-        </div>
-
-        <button
-          onClick={startNewChat}
-          className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
-        >
-          + New Chat
-        </button>
-
-        <h3 className="font-semibold mb-2">Chat History</h3>
-        <ul className="space-y-1 text-sm text-gray-700 overflow-y-auto max-h-[60vh] pr-1">
-          {conversationList.length === 0 && (
-            <li className="text-gray-500 text-sm">No conversations yet</li>
-          )}
-
-          {conversationList.map((conv) => (
-            <li
-              key={conv.conversation_id}
-              className="border rounded px-2 py-1 hover:bg-gray-100 flex justify-between items-center"
+    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
+      <div className="flex w-11/12 h-5/6 rounded-2xl shadow-xl overflow-hidden bg-white/70 backdrop-blur-md">
+        {/* Sidebar */}
+        <div className="w-64 border-r p-4 flex flex-col gap-6">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold">EduSense</h1>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1 border rounded-md hover:bg-gray-100 text-sm"
             >
-              <span
-                onClick={() => loadConversation(conv.conversation_id)}
-                className="flex-grow cursor-pointer"
-              >
-                {conv.title || `Chat ${conv.conversation_id}`}
-              </span>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteConversation(conv.conversation_id);
-                }}
-                className="ml-3 text-red-500 hover:text-red-700 font-bold"
-              >
-                ✕
-              </button>
-            </li>
-
-          ))}
-        </ul>
-
-      </div>
-
-      {/* Chat + Course/Assignment Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Course & Assignment Selection */}
-        <div className="p-4 border-b flex flex-col items-center gap-3">
-          <div className="flex gap-6">
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Select Course
-              </label>
-              <select
-                className="border rounded-md px-3 py-2"
-                value={selectedCourse}
-                onChange={(e) => setSelectedCourse(e.target.value)}
-              >
-                <option value="">Choose a course</option>
-                {courses.map((course) => (
-                  <option key={course.course_id} value={course.course_id}>
-                    {course.name}
-                  </option>
-                ))}
-
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-1">
-                Select Assignment
-              </label>
-              <select
-                className="border rounded-md px-3 py-2"
-                value={selectedAssignment}
-                onChange={async (e) => {
-                  const assignment = Number(e.target.value);
-                  setSelectedAssignment(assignment);
-                  setAssignmentFiles(null);   // DB assignments don't have static files
-                  setFileLoading(false);
-
-                }}
-
-
-                disabled={!selectedCourse}
-              >
-                <option value="">No assignment</option>
-                {assignments.map((a) => (
-                  <option key={a.assignment_id} value={a.assignment_id}>
-                    {a.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+              Logout
+            </button>
           </div>
 
-          {selectedCourse && selectedAssignment && (
-            <p className="text-gray-600 text-sm mt-2">
-              Great choice! Let’s get started on{" "}
-              <span className="font-semibold">{selectedCourse}</span>,{" "}
-              <span className="font-semibold">
-                {assignments.find(a => a.assignment_id == selectedAssignment)?.title || ""}
-              </span>
-            </p>
-          )}
+          <button
+            onClick={startNewChat}
+            className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+          >
+            + New Chat
+          </button>
+
+          <h3 className="font-semibold mb-2">Chat History</h3>
+          <ul className="space-y-1 text-sm text-gray-700 overflow-y-auto max-h-[60vh] pr-1">
+            {conversationList.length === 0 && (
+              <li className="text-gray-500 text-sm">No conversations yet</li>
+            )}
+
+            {conversationList.map((conv) => (
+              <li
+                key={conv.conversation_id}
+                className="border rounded px-2 py-1 hover:bg-gray-100 flex justify-between items-center"
+              >
+                <span
+                  onClick={() => loadConversation(conv.conversation_id)}
+                  className="flex-grow cursor-pointer"
+                >
+                  {conv.title || `Chat ${conv.conversation_id}`}
+                </span>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(conv.conversation_id);
+                  }}
+                  className="ml-3 text-red-500 hover:text-red-700 font-bold"
+                >
+                  ✕
+                </button>
+              </li>
+
+            ))}
+          </ul>
+
         </div>
 
-        {assignmentFile && <span style={{ display: "none" }}>{assignmentFile.name}</span>}
+        {/* Chat + Course/Assignment Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Course & Assignment Selection */}
+          <div className="p-4 border-b flex flex-col items-center gap-3">
+            <div className="flex gap-6">
+              <div>
+                <label className="block text-sm font-semibold mb-1">
+                  Select Course
+                </label>
+                <select
+                  className="border rounded-md px-3 py-2"
+                  value={selectedCourse}
+                  onChange={(e) => setSelectedCourse(e.target.value)}
+                >
+                  <option value="">Choose a course</option>
+                  {courses.map((course) => (
+                    <option key={course.course_id} value={course.course_id}>
+                      {course.name}
+                    </option>
+                  ))}
+
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-1">
+                  Select Assignment
+                </label>
+                <select
+                  className="border rounded-md px-3 py-2"
+                  value={selectedAssignment}
+                  onChange={async (e) => {
+                    const assignment = Number(e.target.value);
+                    setSelectedAssignment(assignment);
+                    setFileLoading(true);
+                    setAssignmentFiles(null);
+
+                    const selected = assignments.find(a => a.assignment_id === assignment);
+
+                    if (selected?.file) {
+                      try {
+                        const fileURL = selected.file;
+                        console.log("Loading assignment file:", fileURL);
+
+                        const response = await fetch(fileURL);
+                        const blob = await response.blob();
+                        const filename = selected.file.split("/").pop();
+
+                        setAssignmentFiles(new File([blob], filename));
+                      } catch (err) {
+                        console.error("Failed loading assignment file:", err);
+                      }
+                    }
+
+                    setFileLoading(false);
+                  }}
 
 
-        {/* Chat Area */}
-        <div className="flex-1 p-6 overflow-y-auto">
-          {chat.length === 0 ? (
-            <p className="text-center text-gray-500 mt-10">
-              Welcome back. Select a course to get started.
-            </p>
-          ) : (
-            chat.map((msg, i) => (
-              <div
-                key={i}
-                className={`mb-4 ${msg.sender === "student" ? "text-right" : "text-left"
-                  }`}
-              >
+
+                  disabled={!selectedCourse}
+                >
+                  <option value="">No assignment</option>
+                  {assignments.map((a) => (
+                    <option key={a.assignment_id} value={a.assignment_id}>
+                      {a.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {selectedCourse && selectedAssignment && (
+              <p className="text-gray-600 text-sm mt-2">
+                Great choice! Let’s get started on{" "}
+                <span className="font-semibold">{selectedCourse}</span>,{" "}
+                <span className="font-semibold">
+                  {assignments.find(a => a.assignment_id == selectedAssignment)?.title || ""}
+                </span>
+              </p>
+            )}
+          </div>
+
+          {assignmentFile && <span style={{ display: "none" }}>{assignmentFile.name}</span>}
+
+
+          {/* Chat Area */}
+          <div className="flex-1 p-6 overflow-y-auto">
+            {chat.length === 0 ? (
+              <p className="text-center text-gray-500 mt-10">
+                Welcome back. Select a course to get started.
+              </p>
+            ) : (
+              chat.map((msg, i) => (
                 <div
-                  className={`inline-block px-4 py-2 rounded-lg shadow-sm ${msg.sender === "student"
-                    ? "bg-blue-100 border border-blue-200"
-                    : "bg-gray-100 border border-gray-200"
+                  key={i}
+                  className={`mb-4 ${msg.sender === "student" ? "text-right" : "text-left"
                     }`}
                 >
-                  <p>{msg.text}</p>
-                  <p className="text-xs text-gray-500 mt-1">{msg.time}</p>
+                  <div
+                    className={`inline-block px-4 py-2 rounded-lg shadow-sm ${msg.sender === "student"
+                      ? "bg-blue-100 border border-blue-200"
+                      : "bg-gray-100 border border-gray-200"
+                      }`}
+                  >
+                    <p>{msg.text}</p>
+                    <p className="text-xs text-gray-500 mt-1">{msg.time}</p>
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
+
+          {/* Input Area */}
+          <div className="p-4 border-t flex gap-2 items-center">
+            <input
+              type="file"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="border rounded-md p-2"
+            />
+
+
+            <input
+              type="text"
+              className="flex-1 border rounded-md px-3 py-2"
+              placeholder="Ask a question..."
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  sendPrompt();
+                }
+
+              }}
+            />
+
+            <button
+              onClick={sendPrompt}
+              className="ml-2 bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
+            >
+              ➤
+            </button>
+          </div>
+
         </div>
-
-        {/* Input Area */}
-        <div className="p-4 border-t flex gap-2 items-center">
-          <input
-            type="file"
-            onChange={(e) => setSelectedFile(e.target.files[0])}
-            className="border rounded-md p-2"
-          />
-
-
-          <input
-            type="text"
-            className="flex-1 border rounded-md px-3 py-2"
-            placeholder="Ask a question..."
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                sendPrompt();
-              }
-
-            }}
-          />
-
-          <button
-            onClick={sendPrompt}
-            className="ml-2 bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
-          >
-            ➤
-          </button>
-        </div>
-
       </div>
-    </div>
-  </div >
-);
+    </div >
+  );
 }

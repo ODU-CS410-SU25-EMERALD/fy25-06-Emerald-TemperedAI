@@ -219,7 +219,7 @@ class OllamaGenerateView(APIView):
         #print("FILES RECEIVED:", request.FILES)
         #print(f"[OllamaGenerate] ConvID={request.data.get('conversation_id')}, AssignID={request.data.get('assignment_id')}")
 
-        #print("DEBUG RAW request.data:", request.data)
+        print("DEBUG RAW request.data:", request.data)
         #print("DEBUG PROMPT TYPE:", type(request.data.get("prompt")))
         #print("DEBUG ASSIGNMENT TYPE:", type(request.data.get("assignment_id")))
         
@@ -251,9 +251,9 @@ class OllamaGenerateView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 
-            #print("FULL PROMPT AFTER MARKDOWN")
-            #print(ollamaPrompt)
-            #print("END OF FULL PROMPT AFTER MARKDOWN")
+            print("FULL PROMPT AFTER MARKDOWN")
+            print(ollamaPrompt)
+            print("END OF FULL PROMPT AFTER MARKDOWN")
 
 
             if not ollamaPrompt or not ollamaPrompt.strip():
@@ -269,12 +269,6 @@ class OllamaGenerateView(APIView):
             #print("OLLAM MODEL RECEIVED:", ollamaModel)
             #print("|||||||||||||||||")
            
-           # if "```" in ollamaPrompt:
-            #    user_part, assignment_part = ollamaPrompt.split("```", 1)
-            #    user_part = sanitize_input(user_part)
-            #    ollamaPrompt = user_part + "```" + assignment_part
-            #else:
-            ollamaPrompt = sanitize_input(ollamaPrompt)
 
             if contains_prompt_injection(ollamaPrompt):
                 ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")

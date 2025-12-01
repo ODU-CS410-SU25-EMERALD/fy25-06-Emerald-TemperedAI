@@ -25,6 +25,8 @@ export default function TeacherDashboard() {
   const [assignments, setAssignments] = useState([]);
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+
 
 
   useEffect(() => {
@@ -55,18 +57,17 @@ export default function TeacherDashboard() {
       return;
     }
 
+    const formData = new FormData();
+    formData.append("title", assignmentTitle);
+    formData.append("course", selectedCourse);
+    formData.append("settings", "");
+    if (selectedFile) formData.append("file", selectedFile);
+
     fetch("http://localhost:8000/api/assignments/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: assignmentTitle,
-        course: selectedCourse,
-        due_date: dueDate || null,
-        settings: null
-      }),
+      body: formData,
     })
+
       .then((res) => res.json())
       .then((data) => {
         console.log("Created assignment:", data);
@@ -180,11 +181,12 @@ export default function TeacherDashboard() {
               </div>
             </div>
 
-            {/* File Upload */}
-            <div className="mb-6">
-              <label className="block font-semibold mb-1">Upload Files</label>
-              <input type="file" className="block text-sm text-gray-700" />
-            </div>
+            <input
+              type="file"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="block text-sm text-gray-700"
+            />
+
 
             {/* Button */}
             <button

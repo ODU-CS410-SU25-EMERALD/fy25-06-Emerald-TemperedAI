@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-=su+wyec$x^ccyj78j+!1x9oy8@_4bd$+2hfp$tat6_l3f@lbu'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
@@ -88,6 +88,9 @@ DATABASES = {
         'NAME': BASE_DIR / '__DATABASE__.db',
     }
 }
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # Password validation

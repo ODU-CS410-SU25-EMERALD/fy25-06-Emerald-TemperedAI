@@ -10,6 +10,8 @@ from rest_framework.routers import DefaultRouter
 from . import views
 from tutor.views import OllamaGenerateView
 from tutor.views import LLM_responseViewSet
+from django.conf import settings
+from django.conf.urls.static import static
 # namespace for application
 app_name = 'tutor'
 
@@ -31,7 +33,6 @@ urlpatterns = [
      # custom path for Ollama proxy (Class-Based View)
      path('ollama/generate/', views.OllamaGenerateView.as_view(), name='ollama_generate'),
      
-    
-
-
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
