@@ -92,16 +92,35 @@ export default function TeacherDashboard() {
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setMode("assignment")}
-            className="px-4 py-2 rounded-lg bg-[#F0EAD8] font-semibold hover:bg-[#e5ddc7]"
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              mode === "assignment" 
+                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]" 
+                : "bg-[#496677]/20 hover:bg-[#496677]/30"
+            }`}
           >
             Assignment Mode
           </button>
 
           <button
             onClick={() => setMode("course")}
-            className="px-4 py-2 rounded-lg bg-[#496677]/20 font-semibold hover:bg-[#496677]/30"
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              mode === "course" 
+                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]" 
+                : "bg-[#496677]/20 hover:bg-[#496677]/30"
+            }`}
           >
             Course Mode
+          </button>
+
+          <button
+            onClick={() => setMode("analytics")}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              mode === "analytics" 
+                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]" 
+                : "bg-[#496677]/20 hover:bg-[#496677]/30"
+            }`}
+          >
+            Analytics
           </button>
         </div>
 
@@ -200,6 +219,15 @@ export default function TeacherDashboard() {
             <p className="text-sm">Mode switching works</p>
           </div>
         )}
+        {mode === "analytics" && (
+          <div className="text-center text-gray-700">
+            <h2 className="text-xl font-semibold mb-4">Analytics Dashboard</h2>
+            <p className="text-sm">View student performance metrics here.</p>
+          </div>
+        )}
+
+
+
       </div>
     </div>
   );
