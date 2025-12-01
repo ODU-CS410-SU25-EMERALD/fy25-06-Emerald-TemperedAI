@@ -15,12 +15,20 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { sendLLMPrompt } from "./api/llmApi";
+import { createConversation } from "./api/conversationApi";;
+
+
+
+
+
 
 export default function StudentDashboard() {
   const [chat, setChat] = useState([]);
   const [userInput, setUserInput] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedAssignment, setSelectedAssignment] = useState("");
+  const [conversationId, setConversationId] = useState(null);
   const navigate = useNavigate();
 
   // Display a welcome message on load
@@ -34,32 +42,79 @@ export default function StudentDashboard() {
     ]);
   }, []);
 
-  // For now, this only updates the chat visually — no backend call yet
-  const sendPrompt = () => {
-    if (!userInput.trim()) return;
 
-    const newMessage = {
-      sender: "student",
-      text: userInput,
+
+  //Sends the user prompt to the backend LLM API
+ const sendPrompt = async () => {
+  if (!userInput.trim()) return;
+
+  // Sdd the student's message to chat
+  const newMessage = {
+    sender: "student",
+    text: userInput,
+    time: new Date().toLocaleTimeString(),
+  };
+
+  setChat((prev) => [...prev, newMessage]);
+  const fullPrompt = `Student: ${userInput}\nTutor:`;
+  setUserInput("");
+
+  try {
+    const data = await sendLLMPrompt({
+      prompt: fullPrompt,
+      course: selectedCourse || undefined,
+      assignment: selectedAssignment || undefined,
+    });
+
+    // edusense model usually returns response text under `response`
+    const aiText =
+      data.response || data.message || "I'm not sure how to respond to that yet.";
+
+    const aiMessage = {
+      sender: "ai",
+      text: aiText,
       time: new Date().toLocaleTimeString(),
     };
 
-    setChat((prev) => [...prev, newMessage]);
+    setChat((prevChat) => [...prevChat, aiMessage]);
+  } catch (err) {
+    const errorMessage = {
+      sender: "ai",
+      text: "I'm having trouble contacting the backend right now. Please try again in a moment.",
+      time: new Date().toLocaleTimeString(),
+    };
+    setChat((prevChat) => [...prevChat, errorMessage]);
+  }
+};
 
-    // Simulate an empty AI placeholder response
-    setTimeout(() => {
-      setChat((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          text: "(AI response will appear here once backend is connected.)",
-          time: new Date().toLocaleTimeString(),
-        },
-      ]);
-    }, 500);
 
-    setUserInput("");
-  };
+
+  // // For now, this only updates the chat visually — no backend call yet
+  // const sendPrompt = () => {
+  //   if (!userInput.trim()) return;
+
+  //   const newMessage = {
+  //     sender: "student",
+  //     text: userInput,
+  //     time: new Date().toLocaleTimeString(),
+  //   };
+
+  //   setChat((prev) => [...prev, newMessage]);
+
+  //   // Simulate an empty AI placeholder response
+  //   setTimeout(() => {
+  //     setChat((prev) => [
+  //       ...prev,
+  //       {
+  //         sender: "ai",
+  //         text: "(AI response will appear here once backend is connected.)",
+  //         time: new Date().toLocaleTimeString(),
+  //       },
+  //     ]);
+  //   }, 500);
+
+  //   setUserInput("");
+  // };
 
   const handleLogout = () => {
     setChat([]);
