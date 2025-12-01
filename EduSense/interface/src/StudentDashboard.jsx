@@ -26,6 +26,25 @@ export default function StudentDashboard() {
   const [conversationList, setConversationList] = useState([]);
   const navigate = useNavigate();
   const [fileLoading, setFileLoading] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/courses/")
+      .then(res => res.json())
+      .then(data => setCourses(data))
+      .catch(err => console.error("Failed to fetch courses:", err));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCourse) return;
+
+    fetch(`http://localhost:8000/api/assignments/?course_id=${selectedCourse}`)
+      .then(res => res.json())
+      .then(data => setAssignments(data))
+      .catch(err => console.error("Failed to fetch assignments:", err));
+  }, [selectedCourse]);
 
 
   // Display a welcome message on load
@@ -38,53 +57,6 @@ export default function StudentDashboard() {
       },
     ]);
   }, []);
-
-  const assignmentFiles = {
-    "Database Concepts HW 5": "/assignments/db_1.docx",
-    "Database Concepts HW 1": "/assignments/db_2.docx",
-    "Philosophy Module 3 HW": "/assignments/phil_1.docx",
-    "Philosophy Module 11 HW": "/assignments/phil_2.docx",
-    "Statistics Probability Handout 2": "/assignments/stat_1.pdf",
-    "Statistics Estimating Proportions adn Variances Handout": "/assignments/stat_2.pdf",
-  };
-
-  const courseAssignments = {
-    "CS450 DATABASE CONCEPTS": [
-      "Database Concepts HW 5",
-      "Database Concepts HW 1",
-    ],
-    "STAT330 INTRO-PROBABILITY & STAT": [
-      "Statistics Probability Handout 2",
-      "Statistics Estimating Proportions adn Variances Handout",
-    ],
-    "PHIL1000 INTRODUCTION TO PHILOSOPHY": [
-      "Philosophy Module 3 HW",
-      "Philosophy Module 11 HW",
-    ],
-  };
-
-  const assignmentIds = {
-    "Database Concepts HW 1": 1,
-    "Database Concepts HW 5": 2,
-    "Philosophy Module 3 HW": 3,
-    "Philosophy Module 11 HW": 4,
-    "Statistics Probability Handout 2": 5,
-    "Statistics Estimating Proportions adn Variances Handout": 6,
-  };
-
-  const courseIds = {
-    "CS450 DATABASE CONCEPTS": 1,
-    "PHIL1000 INTRODUCTION TO PHILOSOPHY": 2,
-    "STAT330 INTRO-PROBABILITY & STAT": 3,
-  };
-
-  const assignmentToCourse = Object.keys(courseAssignments).reduce((map, courseName) => {
-    courseAssignments[courseName].forEach(a => {
-      map[a] = courseName;
-    });
-    return map;
-  }, {});
-
 
   const [assignmentFile, setAssignmentFiles] = useState(null);
 
@@ -150,6 +122,9 @@ export default function StudentDashboard() {
 
   // For now, this only updates the chat visually — no backend call yet
   const sendPrompt = async () => {
+    const selectedCourseName = courses.find(c => c.course_id == selectedCourse)?.name || "";
+    const selectedAssignmentTitle = assignments.find(a => a.assignment_id == selectedAssignment)?.title || "";
+
     setUserInput("");
 
     if (fileLoading) {
@@ -179,7 +154,7 @@ export default function StudentDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: "New Chat",
-          assignment: selectedAssignment ? assignmentIds[selectedAssignment] : null,
+          assignment: selectedAssignment || null,
           student: 1,  // temp hardcoded student
         }),
       });
@@ -214,7 +189,7 @@ export default function StudentDashboard() {
       body: JSON.stringify({
         question_text: userInput,
         answer: "",
-        assignment: selectedAssignment ? assignmentIds[selectedAssignment] : null,
+        assignment: selectedAssignment || null,
         conversation: convId,
       }),
     }
@@ -227,8 +202,8 @@ export default function StudentDashboard() {
       .join("\n");
 
     const promptToSend = [
-      `Course: ${selectedCourse}`,
-      `Assignment: ${selectedAssignment || "None Selected"}`,
+      `Course: ${selectedCourseName}`,
+      `Assignment: ${selectedAssignmentTitle || "None Selected"}`,
       ``,
       `Conversation History:`,
       historyText,
@@ -242,7 +217,7 @@ export default function StudentDashboard() {
       promptToSend,
       fileToSend,
       convId,
-      selectedAssignment ? assignmentIds[selectedAssignment] : null
+      selectedAssignment ? selectedAssignment : null
     );
 
     if (aiText && aiText.error) {
@@ -338,234 +313,217 @@ export default function StudentDashboard() {
 
     setChat(loadedChat);
 
-    const assignmentName = Object.keys(assignmentIds)
-      .find(name => assignmentIds[name] === data.assignment);
+    setSelectedAssignment(data.assignment);
+    setSelectedCourse(data.course);
+    setAssignmentFiles(null); // DB assignments have no files (yet)
 
-    setSelectedAssignment(assignmentName || "");
+};
 
-    const courseName = assignmentToCourse[assignmentName];
-    setSelectedCourse(courseName);
+async function deleteConversation(id) {
+  if (!window.confirm("Delete this chat?")) return;
 
-    if (assignmentName && assignmentFiles[assignmentName]) {
-      const file = await loadAssignmentFile(assignmentFiles[assignmentName]);
-      setAssignmentFiles(file);
+  try {
+    const response = await fetch(`http://localhost:8000/api/conversations/${id}/`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      setConversationList(conversationList.filter(c => c.conversation_id !== id));
+      setChat([{ sender: "ai", text: "Chat deleted.", time: new Date().toLocaleTimeString() }]);
+      setConversationId(null);
+    } else {
+      alert("Failed to delete chat");
     }
-  };
-
-  async function deleteConversation(id) {
-    if (!window.confirm("Delete this chat?")) return;
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/conversations/${id}/`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setConversationList(conversationList.filter(c => c.conversation_id !== id));
-        setChat([{ sender: "ai", text: "Chat deleted.", time: new Date().toLocaleTimeString() }]);
-        setConversationId(null);
-      } else {
-        alert("Failed to delete chat");
-      }
-    } catch (err) {
-      console.error("Error deleting:", err);
-    }
+  } catch (err) {
+    console.error("Error deleting:", err);
   }
+}
 
 
-  return (
+return (
 
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
-      <div className="flex w-11/12 h-5/6 rounded-2xl shadow-xl overflow-hidden bg-white/70 backdrop-blur-md">
-        {/* Sidebar */}
-        <div className="w-64 border-r p-4 flex flex-col gap-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold">EduSense</h1>
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1 border rounded-md hover:bg-gray-100 text-sm"
-            >
-              Logout
-            </button>
-          </div>
-
+  <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
+    <div className="flex w-11/12 h-5/6 rounded-2xl shadow-xl overflow-hidden bg-white/70 backdrop-blur-md">
+      {/* Sidebar */}
+      <div className="w-64 border-r p-4 flex flex-col gap-6">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold">EduSense</h1>
           <button
-            onClick={startNewChat}
-            className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+            onClick={handleLogout}
+            className="px-3 py-1 border rounded-md hover:bg-gray-100 text-sm"
           >
-            + New Chat
+            Logout
           </button>
-
-          <h3 className="font-semibold mb-2">Chat History</h3>
-          <ul className="space-y-1 text-sm text-gray-700 overflow-y-auto max-h-[60vh] pr-1">
-            {conversationList.length === 0 && (
-              <li className="text-gray-500 text-sm">No conversations yet</li>
-            )}
-
-            {conversationList.map((conv) => (
-              <li
-                key={conv.conversation_id}
-                className="border rounded px-2 py-1 hover:bg-gray-100 flex justify-between items-center"
-              >
-                <span
-                  onClick={() => loadConversation(conv.conversation_id)}
-                  className="flex-grow cursor-pointer"
-                >
-                  {conv.title || `Chat ${conv.conversation_id}`}
-                </span>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteConversation(conv.conversation_id);
-                  }}
-                  className="ml-3 text-red-500 hover:text-red-700 font-bold"
-                >
-                  ✕
-                </button>
-              </li>
-
-            ))}
-          </ul>
-
         </div>
 
-        {/* Chat + Course/Assignment Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Course & Assignment Selection */}
-          <div className="p-4 border-b flex flex-col items-center gap-3">
-            <div className="flex gap-6">
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Select Course
-                </label>
-                <select
-                  className="border rounded-md px-3 py-2"
-                  value={selectedCourse}
-                  onChange={(e) => setSelectedCourse(e.target.value)}
-                >
-                  <option value="">Choose a course</option>
-                  <option value="CS450 DATABASE CONCEPTS">
-                    CS450 DATABASE CONCEPTS
+        <button
+          onClick={startNewChat}
+          className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+        >
+          + New Chat
+        </button>
+
+        <h3 className="font-semibold mb-2">Chat History</h3>
+        <ul className="space-y-1 text-sm text-gray-700 overflow-y-auto max-h-[60vh] pr-1">
+          {conversationList.length === 0 && (
+            <li className="text-gray-500 text-sm">No conversations yet</li>
+          )}
+
+          {conversationList.map((conv) => (
+            <li
+              key={conv.conversation_id}
+              className="border rounded px-2 py-1 hover:bg-gray-100 flex justify-between items-center"
+            >
+              <span
+                onClick={() => loadConversation(conv.conversation_id)}
+                className="flex-grow cursor-pointer"
+              >
+                {conv.title || `Chat ${conv.conversation_id}`}
+              </span>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteConversation(conv.conversation_id);
+                }}
+                className="ml-3 text-red-500 hover:text-red-700 font-bold"
+              >
+                ✕
+              </button>
+            </li>
+
+          ))}
+        </ul>
+
+      </div>
+
+      {/* Chat + Course/Assignment Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Course & Assignment Selection */}
+        <div className="p-4 border-b flex flex-col items-center gap-3">
+          <div className="flex gap-6">
+            <div>
+              <label className="block text-sm font-semibold mb-1">
+                Select Course
+              </label>
+              <select
+                className="border rounded-md px-3 py-2"
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+              >
+                <option value="">Choose a course</option>
+                {courses.map((course) => (
+                  <option key={course.course_id} value={course.course_id}>
+                    {course.name}
                   </option>
-                  <option value="PHIL1000 INTRODUCTION TO PHILOSOPHY">
-                    PHIL1000 INTRODUCTION TO PHILOSOPHY
-                  </option>
-                  <option value="STAT330 INTRO-PROBABILITY & STAT">
-                    STAT330 INTRO-PROBABILITY & STAT
-                  </option>
+                ))}
 
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Select Assignment
-                </label>
-                <select
-                  className="border rounded-md px-3 py-2"
-                  value={selectedAssignment}
-                  onChange={async (e) => {
-                    const assignment = e.target.value;
-                    setSelectedAssignment(assignment);
-                    const filePath = assignmentFiles[assignment];
-
-                    if (assignment && filePath) {
-                      setFileLoading(true);
-                      const file = await loadAssignmentFile(filePath);
-                      setAssignmentFiles(file);
-                      setFileLoading(false);
-                    } else {
-                      setAssignmentFiles(null); // clear old file
-                    }
-                  }}
-
-                  disabled={!selectedCourse}
-                >
-                  <option value="">No assignment</option>
-                  {selectedCourse &&
-                    courseAssignments[selectedCourse]?.map((assignment) => (
-                      <option key={assignment} value={assignment}>
-                        {assignment}
-                      </option>
-                    ))}
-                </select>
-              </div>
+              </select>
             </div>
 
-            {selectedCourse && selectedAssignment && (
-              <p className="text-gray-600 text-sm mt-2">
-                Great choice! Let’s get started on{" "}
-                <span className="font-semibold">{selectedCourse}</span>,{" "}
-                <span className="font-semibold">{selectedAssignment}</span>.
-              </p>
-            )}
+            <div>
+              <label className="block text-sm font-semibold mb-1">
+                Select Assignment
+              </label>
+              <select
+                className="border rounded-md px-3 py-2"
+                value={selectedAssignment}
+                onChange={async (e) => {
+                  const assignment = Number(e.target.value);
+                  setSelectedAssignment(assignment);
+                  setAssignmentFiles(null);   // DB assignments don't have static files
+                  setFileLoading(false);
+
+                }}
+
+
+                disabled={!selectedCourse}
+              >
+                <option value="">No assignment</option>
+                {assignments.map((a) => (
+                  <option key={a.assignment_id} value={a.assignment_id}>
+                    {a.title}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {assignmentFile && <span style={{ display: "none" }}>{assignmentFile.name}</span>}
+          {selectedCourse && selectedAssignment && (
+            <p className="text-gray-600 text-sm mt-2">
+              Great choice! Let’s get started on{" "}
+              <span className="font-semibold">{selectedCourse}</span>,{" "}
+              <span className="font-semibold">
+                {assignments.find(a => a.assignment_id == selectedAssignment)?.title || ""}
+              </span>
+            </p>
+          )}
+        </div>
+
+        {assignmentFile && <span style={{ display: "none" }}>{assignmentFile.name}</span>}
 
 
-          {/* Chat Area */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            {chat.length === 0 ? (
-              <p className="text-center text-gray-500 mt-10">
-                Welcome back. Select a course to get started.
-              </p>
-            ) : (
-              chat.map((msg, i) => (
+        {/* Chat Area */}
+        <div className="flex-1 p-6 overflow-y-auto">
+          {chat.length === 0 ? (
+            <p className="text-center text-gray-500 mt-10">
+              Welcome back. Select a course to get started.
+            </p>
+          ) : (
+            chat.map((msg, i) => (
+              <div
+                key={i}
+                className={`mb-4 ${msg.sender === "student" ? "text-right" : "text-left"
+                  }`}
+              >
                 <div
-                  key={i}
-                  className={`mb-4 ${msg.sender === "student" ? "text-right" : "text-left"
+                  className={`inline-block px-4 py-2 rounded-lg shadow-sm ${msg.sender === "student"
+                    ? "bg-blue-100 border border-blue-200"
+                    : "bg-gray-100 border border-gray-200"
                     }`}
                 >
-                  <div
-                    className={`inline-block px-4 py-2 rounded-lg shadow-sm ${msg.sender === "student"
-                      ? "bg-blue-100 border border-blue-200"
-                      : "bg-gray-100 border border-gray-200"
-                      }`}
-                  >
-                    <p>{msg.text}</p>
-                    <p className="text-xs text-gray-500 mt-1">{msg.time}</p>
-                  </div>
+                  <p>{msg.text}</p>
+                  <p className="text-xs text-gray-500 mt-1">{msg.time}</p>
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* Input Area */}
-          <div className="p-4 border-t flex gap-2 items-center">
-            <input
-              type="file"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="border rounded-md p-2"
-            />
-
-
-            <input
-              type="text"
-              className="flex-1 border rounded-md px-3 py-2"
-              placeholder="Ask a question..."
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  sendPrompt();
-                }
-
-              }}
-            />
-
-            <button
-              onClick={sendPrompt}
-              className="ml-2 bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
-            >
-              ➤
-            </button>
-          </div>
-
+              </div>
+            ))
+          )}
         </div>
+
+        {/* Input Area */}
+        <div className="p-4 border-t flex gap-2 items-center">
+          <input
+            type="file"
+            onChange={(e) => setSelectedFile(e.target.files[0])}
+            className="border rounded-md p-2"
+          />
+
+
+          <input
+            type="text"
+            className="flex-1 border rounded-md px-3 py-2"
+            placeholder="Ask a question..."
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                sendPrompt();
+              }
+
+            }}
+          />
+
+          <button
+            onClick={sendPrompt}
+            className="ml-2 bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
+          >
+            ➤
+          </button>
+        </div>
+
       </div>
     </div>
-  );
+  </div >
+);
 }

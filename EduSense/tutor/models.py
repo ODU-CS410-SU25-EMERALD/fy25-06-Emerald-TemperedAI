@@ -60,7 +60,7 @@ class Course(models.Model):
     name = models.TextField(blank=True, null=True)
     settings = models.TextField(blank=True, null=True)
     #Defines Model as String
-    def __str_(self):
+    def __str__(self):
         return self.name
     #Model Metadata
     class Meta:

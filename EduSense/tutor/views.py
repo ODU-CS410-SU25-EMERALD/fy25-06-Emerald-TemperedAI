@@ -148,6 +148,13 @@ class assignmentViewSet(ModelViewSet):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        course_id = self.request.query_params.get("course_id")
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+        return queryset
+
 class conversationViewSet(ModelViewSet):
     """
     Creates a Conversation ModelViewSet to provide CRUD API functionality for accessing Conversation model
