@@ -149,6 +149,27 @@ class Student(models.Model):
     class Meta:
         ordering = ['student_id']
         db_table = 'Student'
+class User(models.Model):
+    """
+    Represents a registered user for authentication.
+    """
+    ROLE_CHOICES = [
+        ('student', 'Student'),
+        ('teacher', 'Teacher'),
+    ]
+
+    user_id = models.AutoField(primary_key=True)
+    username = models.TextField(unique=True, null=False)
+    email = models.EmailField(unique=True, null=False) # email uniqueness and validation
+    password = models.TextField(null=False) # stores the hashed password
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
+
+    def __str__(self):
+        return self.email
+
+    class Meta:
+        ordering = ['user_id']
+        db_table = 'User'
 
 class DjangoMigrations(models.Model):
     """

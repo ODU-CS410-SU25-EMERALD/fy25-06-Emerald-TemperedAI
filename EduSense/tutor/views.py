@@ -28,6 +28,10 @@ from rest_framework import status
 from .models import *
 from .serializers import *
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from .models import User # Ensure User model is accessible
+from .serializers import UserSerializer # Ensure UserSerializer is accessible
+from django.contrib.auth.hashers import make_password, check_password # For password hashing
+from rest_framework.views import APIView
 
 logging.getLogger("markitdown").setLevel(logging.ERROR)
 
@@ -208,6 +212,73 @@ class studentViewSet(ModelViewSet):
 
 
 ########################################### LLM ENDPOINTS ##########################################
+
+
+
+class SignupView(APIView):
+    """
+    Handles user registration.
+    """
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+
+            # prevents duplicate email registration
+            if User.objects.filter(email=email).exists():
+                return APIResponse({"detail": "User with this email already exists."}, 
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+            # hashes the password before saving
+            user = serializer.save()
+            user.password = make_password(serializer.validated_data['password'])
+            user.save()
+
+            return APIResponse({"detail": "User registered successfully."}, 
+                                status=status.HTTP_201_CREATED)
+
+        return APIResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginView(APIView):
+    """
+    Handles user login and returns role for frontend access control.
+    """
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not email or not password:
+            return APIResponse({"detail": "Must include email and password."}, 
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # "need to register" message on frontend
+            return APIResponse({"detail": "Invalid credentials or user not found. Please register first."}, 
+                                status=status.HTTP_401_UNAUTHORIZED)
+
+        # verifies password hash
+        if not check_password(password, user.password):
+            return APIResponse({"detail": "Invalid credentials or user not found. Please register first."}, 
+                                status=status.HTTP_401_UNAUTHORIZED)
+
+        return APIResponse({
+            "email": user.email,
+            "role": user.role
+        }, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
 
 class OllamaGenerateView(APIView):
     parser_classes = (MultiPartParser, FormParser, JSONParser)

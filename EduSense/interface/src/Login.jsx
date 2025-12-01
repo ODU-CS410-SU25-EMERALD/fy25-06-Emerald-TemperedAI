@@ -28,21 +28,78 @@ export default function Login() {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const onSubmit = (data) => {
-    if (activeTab === "student") {
-      localStorage.setItem('studentEmail', data.email);
-      navigate("/student-dashboard");
-    } else if (activeTab === "teacher") {
-      localStorage.setItem('teacherEmail', data.email);
-      navigate("/teacher-dashboard");
-    } else if (activeTab === "signup") {
-      // Basic validation: check if passwords match
+  const onSubmit = async (data) => {
+    // setErrorMessage(""); 
+
+    if (activeTab === "signup") {
       if (data.password !== data.confirmPassword) {
         alert("Passwords do not match!");
         return;
       }
-      console.log("Signup data:", data); 
-      navigate("/student-dashboard"); 
+
+      try {
+          const res = await fetch("http://localhost:8000/api/signup", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                  username: data.username, 
+                  email: data.email, 
+                  password: data.password, 
+                  role: signupRole 
+              }),
+          });
+
+          const result = await res.json();
+          if (res.ok) {
+              alert("Registration successful! Please log in.");
+          } else {
+              alert(result.detail || "Registration failed.");
+          }
+      } catch (error) {
+          alert("Failed to connect to the server for signup.");
+      }
+
+    } else {
+        
+      try {
+          const res = await fetch("http://localhost:8000/api/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                  email: data.email, 
+                  password: data.password 
+              }),
+          });
+
+          const user = await res.json();
+          
+          if (!res.ok) {
+              alert(user.detail || "Invalid credentials. Please register first.");
+              return;
+          }
+          
+          const userRole = user.role;
+          
+          if (activeTab === "teacher") {
+              if (userRole === "teacher") {
+                  localStorage.setItem('teacherEmail', user.email);
+                  navigate("/teacher-dashboard");
+              } else {
+                  alert("You are not registered as a teacher.");
+              }
+          } else if (activeTab === "student") {
+              // teachers can log in on the student screen
+              if (userRole === "student" || userRole === "teacher") { 
+                  localStorage.setItem('studentEmail', user.email);
+                  navigate("/student-dashboard");
+              } else {
+                  alert("You are not authorized for student login.");
+              }
+          }
+
+      } catch (error) {
+          alert("Failed to connect to the server for login.");
+      }
     }
     reset();
   };

@@ -76,3 +76,13 @@ class DjangoMigrationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DjangoMigrations
         fields = '__all__'
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the User model.
+    """
+    class Meta:
+        model = User
+        fields = '__all__'
+        # Ensures password is only used when writing (registration) and not exposed on read
+        extra_kwargs = {'password': {'write_only': True}}        
