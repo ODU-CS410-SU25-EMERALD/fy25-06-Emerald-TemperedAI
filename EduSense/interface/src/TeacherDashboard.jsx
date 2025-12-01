@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 /**
  * Purpose: Provides the main dashboard interface for teachers.
  * 
@@ -19,6 +20,7 @@ import React, { useState, useEffect } from "react";
  */
 export default function TeacherDashboard() {
 
+  const navigate = useNavigate();
   const [mode, setMode] = useState("assignment");
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("");
@@ -26,6 +28,7 @@ export default function TeacherDashboard() {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [teacherId, setTeacherId] = useState(null);
 
 
 
@@ -50,6 +53,10 @@ export default function TeacherDashboard() {
       })
       .catch((err) => console.error("Error fetching assignments:", err));
   }, [selectedCourse]);
+
+  const handleLogout = () => {
+    navigate("/");
+  };
 
   const createAssignment = () => {
     if (!selectedCourse || !assignmentTitle.trim()) {
@@ -87,8 +94,15 @@ export default function TeacherDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Create New Assignment</h1>
-          <button className="text-gray-500 hover:text-gray-700">⚙️</button>
-        </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1 border rounded-md hover:bg-gray-100 text-sm"
+            >
+              Logout
+            </button>
+            <button className="text-gray-500 hover:text-gray-700">⚙️</button>
+          </div>        </div>
 
         <div className="flex gap-4 mb-6">
           <button
