@@ -168,8 +168,23 @@ class conversationViewSet(ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         #print("DEBUG Conversation POST data:", request.data)
-        return super().create(request, *args, **kwargs)
+        student_email = request.data.get('student')
+        
+        try:
+            student_obj = Student.objects.get(email__iexact=student_email.strip()) 
+            request.data['student'] = student_obj.student_id 
+            
+        except Student.DoesNotExist:
+            return APIResponse({
+                "student": [f"No Student object found for email: {student_email}"]
+            }, status=status.HTTP_400_BAD_REQUEST)        
 
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        headers = self.get_success_headers(serializer.data)
+        return APIResponse(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
 class courseViewSet(ModelViewSet):
     """
@@ -235,6 +250,21 @@ class SignupView(APIView):
             user.password = make_password(serializer.validated_data['password'])
             user.save()
 
+            role = user.role
+        
+            if role == 'student':
+                try:
+                    Student.objects.create(
+                        name=user.username, 
+                        email=user.email,
+                        access_token=f"student-token-{user.user_id}", 
+                    )
+                except Exception as e:
+                    return APIResponse({"detail": f"User registered, but student profile creation failed: {e}"}, 
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            elif role == 'teacher':
+                pass
             return APIResponse({"detail": "User registered successfully."}, 
                                 status=status.HTTP_201_CREATED)
 
