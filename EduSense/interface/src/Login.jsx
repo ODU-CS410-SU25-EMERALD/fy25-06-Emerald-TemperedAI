@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 export default function Login() {
   const [activeTab, setActiveTab] = useState("student");
   const navigate = useNavigate();
+  const [signupRole, setSignupRole] = useState("student");
 
   const { register, handleSubmit, reset } = useForm();
 
@@ -123,14 +124,43 @@ export default function Login() {
           />
 
           {activeTab === "signup" && (
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              {...register("confirmPassword", {
-                required: "Please confirm your password",
-              })}
-              className="p-3 mb-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#F0EAD8]"
-            />
+            <>
+              <div className="flex justify-center gap-4 my-4 p-2 bg-gray-100 rounded-lg shadow-inner">
+                <span className="font-semibold text-sm self-center text-gray-700">Register As:</span>
+                <div className="flex bg-white rounded-full p-1 shadow">
+                  <button
+                    type="button"
+                    onClick={() => setSignupRole("student")}
+                    className={`px-4 py-1 rounded-full text-sm font-semibold transition-colors ${
+                      signupRole === "student"
+                        ? "bg-[#496677] text-white shadow-md"
+                        : "text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSignupRole("teacher")}
+                    className={`px-4 py-1 rounded-full text-sm font-semibold transition-colors ${
+                      signupRole === "teacher"
+                        ? "bg-[#496677] text-white shadow-md"
+                        : "text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Teacher
+                  </button>
+                </div>
+              </div>
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
+                })}
+                className="p-3 mb-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#F0EAD8]"
+              />
+            </>
           )}
 
           <button
