@@ -63,6 +63,7 @@ export default function TeacherDashboard() {
     formData.append("settings", "");
     formData.append("llm_model", llmModel);
     formData.append("due_date", dueDate);
+    formData.append("teacher_id", 1); // Hardcoded for now
     if (selectedFile) formData.append("file", selectedFile);
 
     fetch("http://localhost:8000/api/assignments/", {
@@ -162,7 +163,11 @@ export default function TeacherDashboard() {
                   type="date"
                   className="w-full border rounded-md px-3 py-2"
                   value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
+                  onChange={(e) => {
+                    const formatted = e.target.value;
+                    setDueDate(formatted);
+                    
+                  }}
                 />
               </div>
 
