@@ -28,19 +28,20 @@ export default function TeacherDashboard() {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [teacherId, setTeacherId] = useState(null);
+  const [teacherId, setTeacherId] = useState("logged.in@teacher.com");
 
 
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/courses/")
+    if (!teacherId) return;
+    fetch("http://localhost:8000/api/courses/?teacher_email=${teacherId}")
       .then(res => res.json())
       .then(data => {
         console.log("Fetched courses:", data);
         setCourses(data)
       })
       .catch(err => console.error("Error fetching courses:", err));
-  }, []);
+  }, [teacherId]);
 
   useEffect(() => {
     if (!selectedCourse) return;
@@ -67,6 +68,8 @@ export default function TeacherDashboard() {
     const formData = new FormData();
     formData.append("title", assignmentTitle);
     formData.append("course", selectedCourse);
+    formData.append("teacher", teacherId);
+    formData.append("due_date", dueDate || null);
     formData.append("settings", "");
     if (selectedFile) formData.append("file", selectedFile);
 
@@ -81,6 +84,7 @@ export default function TeacherDashboard() {
         // optionally re-fetch assignments
         setAssignments([...assignments, data]);
         setAssignmentTitle(""); // Clear form
+        setDueDate("");
         alert("Assignment created!");
       })
       .catch((err) => console.error("Error creating assignment:", err));
