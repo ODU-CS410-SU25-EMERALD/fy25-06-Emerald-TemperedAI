@@ -17,6 +17,7 @@ class Assignment(models.Model):
     title = models.TextField(blank=True, null=True)
     due_date = models.TextField(blank=True, null=True)
     settings = models.TextField(blank=True, null=True)
+    llm_model = models.TextField(blank=True, null=True)
     course = models.ForeignKey('Course', models.CASCADE)
     file = models.FileField(upload_to='assignments/', blank=True, null=True)
     #Defines Model as String

@@ -26,7 +26,7 @@ export default function TeacherDashboard() {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-
+  const [llmModel, setLlmModel] = useState("edusense_testing:latest");
 
 
   useEffect(() => {
@@ -61,6 +61,8 @@ export default function TeacherDashboard() {
     formData.append("title", assignmentTitle);
     formData.append("course", selectedCourse);
     formData.append("settings", "");
+    formData.append("llm_model", llmModel);
+    formData.append("due_date", dueDate);
     if (selectedFile) formData.append("file", selectedFile);
 
     fetch("http://localhost:8000/api/assignments/", {
@@ -93,33 +95,30 @@ export default function TeacherDashboard() {
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setMode("assignment")}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              mode === "assignment" 
-                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]" 
+            className={`px-4 py-2 rounded-lg font-semibold ${mode === "assignment"
+                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]"
                 : "bg-[#496677]/20 hover:bg-[#496677]/30"
-            }`}
+              }`}
           >
             Assignment Mode
           </button>
 
           <button
             onClick={() => setMode("course")}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              mode === "course" 
-                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]" 
+            className={`px-4 py-2 rounded-lg font-semibold ${mode === "course"
+                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]"
                 : "bg-[#496677]/20 hover:bg-[#496677]/30"
-            }`}
+              }`}
           >
             Course Mode
           </button>
 
           <button
             onClick={() => setMode("analytics")}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              mode === "analytics" 
-                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]" 
+            className={`px-4 py-2 rounded-lg font-semibold ${mode === "analytics"
+                ? "bg-[#F0EAD8] hover:bg-[#e5ddc7]"
                 : "bg-[#496677]/20 hover:bg-[#496677]/30"
-            }`}
+              }`}
           >
             Analytics
           </button>
@@ -190,14 +189,17 @@ export default function TeacherDashboard() {
         </div>
         */}
 
-            {/* Slider */}
-            <div className="mb-6">
-              <label className="block font-semibold mb-1">AI Assistance</label>
-              <input type="range" min="0" max="10" className="w-full" />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Low</span>
-                <span>High</span>
-              </div>
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">LLM Model</label>
+              <select
+                className="w-full border rounded-md px-3 py-2"
+                value={llmModel}
+                onChange={(e) => setLlmModel(e.target.value)}
+              >
+                <option value="edusense_testing:latest">EduSense Default</option>
+                <option value="edusense:latest">Strict</option>
+                <option value="edusense_testing:latest">Helpful</option>
+              </select>
             </div>
 
             <input
@@ -226,7 +228,7 @@ export default function TeacherDashboard() {
             <h2 className="text-xl font-bold border-b pb-2">Course Performance Overview</h2>
 
             <div className="grid grid-cols-2 gap-4">
-              
+
               {/* Assignment Completion */}
               <div className="bg-white/90 p-4 rounded-lg shadow">
                 <p className="text-sm text-gray-500">Assignment Completion</p>
@@ -274,20 +276,20 @@ export default function TeacherDashboard() {
                 </div>
               </div>
             </div>
-            
+
             {/* Class Mastery */}
-             <div className="bg-white/90 p-4 rounded-lg shadow">
-                <p className="font-semibold mb-2">Class Mastery by Topic</p>
-                <div className="grid grid-cols-5 gap-1 h-10">
-                    <div className="bg-[#496677]/10"></div>
-                    <div className="bg-[#496677]/30"></div>
-                    <div className="bg-[#496677]/50"></div>
-                    <div className="bg-[#496677]/70"></div>
-                    <div className="bg-[#496677]"></div>
-                </div>
-                <a href="#" className="text-xs text-[#496677] hover:text-[#496677]/80 mt-2 block text-right">View detailed reports &gt;</a>
+            <div className="bg-white/90 p-4 rounded-lg shadow">
+              <p className="font-semibold mb-2">Class Mastery by Topic</p>
+              <div className="grid grid-cols-5 gap-1 h-10">
+                <div className="bg-[#496677]/10"></div>
+                <div className="bg-[#496677]/30"></div>
+                <div className="bg-[#496677]/50"></div>
+                <div className="bg-[#496677]/70"></div>
+                <div className="bg-[#496677]"></div>
+              </div>
+              <a href="#" className="text-xs text-[#496677] hover:text-[#496677]/80 mt-2 block text-right">View detailed reports &gt;</a>
             </div>
-            
+
           </div>
         )}
 

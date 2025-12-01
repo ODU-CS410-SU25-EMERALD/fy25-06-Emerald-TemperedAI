@@ -226,8 +226,7 @@ class OllamaGenerateView(APIView):
         try:
             # get prompt data
             ollamaPrompt = request.data.get('prompt')
-            # gets model data
-            ollamaModel = request.data.get('model', OLLAMA_DEFAULT_MODEL)
+
             conversation_id = request.data.get("conversation") or request.data.get("conversation_id")
             assignment_id = request.data.get("assignment") or request.data.get("assignment_id")
 
@@ -303,6 +302,24 @@ class OllamaGenerateView(APIView):
                 {"error": "Invalid request data format."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+        # gets model data
+        ollamaModel = request.data.get('model', None)
+
+        if assignment_id:
+            try:
+                assignment_obj = Assignment.objects.get(pk=assignment_id)
+                if assignment_obj.llm_model:
+                    ollamaModel = assignment_obj.llm_model
+                    ollamaLogger.info(f"[OllamaGenerate] Using assignment-specific LLM model: {ollamaModel} for Assignment ID: {assignment_id}")
+            except Assignment.DoesNotExist:
+                ollamaLogger.warning(f"[OllamaGenerate] Assignment ID: {assignment_id} not found. Using default or provided model.")
+                pass
+
+            if not ollamaModel:
+                ollamaModel = OLLAMA_DEFAULT_MODEL
+                ollamaLogger.info(f"[OllamaGenerate] No model specified. Using default model: {OLLAMA_DEFAULT_MODEL}")
 
         # prepares payload for the Ollama server
         ollamaPayload = {
