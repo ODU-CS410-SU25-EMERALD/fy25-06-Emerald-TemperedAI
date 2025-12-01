@@ -220,12 +220,74 @@ export default function TeacherDashboard() {
           </div>
         )}
         {mode === "analytics" && (
-          <div className="text-center text-gray-700">
-            <h2 className="text-xl font-semibold mb-4">Analytics Dashboard</h2>
-            <p className="text-sm">View student performance metrics here.</p>
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold border-b pb-2">Course Performance Overview</h2>
+
+            <div className="grid grid-cols-2 gap-4">
+              
+              {/* Assignment Completion */}
+              <div className="bg-white/90 p-4 rounded-lg shadow">
+                <p className="text-sm text-gray-500">Assignment Completion</p>
+                <h3 className="text-4xl font-extrabold text-[#496677]">84%</h3>
+                <div className="h-2 bg-[#F0EAD8] rounded-full mt-2">
+                  <div className="w-[84%] h-2 bg-[#496677] rounded-full"></div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Avg Score: 72%</p>
+              </div>
+
+              {/* Question Performance */}
+              <div className="bg-white/90 p-4 rounded-lg shadow">
+                <p className="text-sm font-semibold mb-2">Question Performance</p>
+                <div className="flex justify-between items-end h-16">
+                  <div className="w-4 bg-[#496677]/60 h-[80%] rounded-t-sm"></div>
+                  <div className="w-4 bg-[#496677]/60 h-[50%] rounded-t-sm"></div>
+                  <div className="w-4 bg-[#496677]/60 h-[95%] rounded-t-sm"></div>
+                  <div className="w-4 bg-[#496677]/60 h-[70%] rounded-t-sm"></div>
+                  <div className="w-4 bg-[#496677]/60 h-[30%] rounded-t-sm"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Student Progress */}
+            <div className="bg-white/90 p-4 rounded-lg shadow">
+              <p className="font-semibold mb-3">Student Progress</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="w-1/5">Ann</span>
+                  <div className="w-4/5 h-2 bg-[#F0EAD8] rounded-full">
+                    <div className="w-[90%] h-2 bg-[#496677] rounded-full"></div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="w-1/5">Bob</span>
+                  <div className="w-4/5 h-2 bg-[#F0EAD8] rounded-full">
+                    <div className="w-[65%] h-2 bg-[#496677] rounded-full"></div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="w-1/5">Lara</span>
+                  <div className="w-4/5 h-2 bg-[#F0EAD8] rounded-full">
+                    <div className="w-[80%] h-2 bg-[#496677] rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Class Mastery */}
+             <div className="bg-white/90 p-4 rounded-lg shadow">
+                <p className="font-semibold mb-2">Class Mastery by Topic</p>
+                <div className="grid grid-cols-5 gap-1 h-10">
+                    <div className="bg-[#496677]/10"></div>
+                    <div className="bg-[#496677]/30"></div>
+                    <div className="bg-[#496677]/50"></div>
+                    <div className="bg-[#496677]/70"></div>
+                    <div className="bg-[#496677]"></div>
+                </div>
+                <a href="#" className="text-xs text-[#496677] hover:text-[#496677]/80 mt-2 block text-right">View detailed reports &gt;</a>
+            </div>
+            
           </div>
         )}
-
 
 
       </div>
