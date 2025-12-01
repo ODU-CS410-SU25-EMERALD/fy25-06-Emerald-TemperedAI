@@ -69,6 +69,7 @@ def sanitize_input(text: str) -> str:
     Sanitizes user input by checking for banned words and replacing them.
     Returns the sanitized string (with banned words replaced by "[filtered]").
     """
+    ollamaLogger.debug(f"[Sanitizer] Input length: {len(text)} chars")
     if not text:
         return text
 
@@ -118,7 +119,7 @@ def contains_prompt_injection(text: str) -> bool:
     """
     Returns True if text appears to include a prompt injection or jailbreak attempt.
     """
-    ollamaLogger.debug(f"[Sanitizer] Checking for prompt injection in: {text}")
+    ollamaLogger.debug(f"[Promp Injection] Input length: {len(text)} chars")
     if not text:
         return False
 
@@ -155,7 +156,7 @@ class conversationViewSet(ModelViewSet):
     serializer_class = ConversationSerializer
     
     def create(self, request, *args, **kwargs):
-        print("DEBUG Conversation POST data:", request.data)
+        #print("DEBUG Conversation POST data:", request.data)
         return super().create(request, *args, **kwargs)
 
     
@@ -178,7 +179,7 @@ class questionViewSet(ModelViewSet):
     Creates an Question ModelViewSet to provide CRUD API functionality for accessing the Question model
     """
     def create(self, request, *args, **kwargs):
-        print("DEBUG Questions POST data:", request.data)
+        #print("DEBUG Questions POST data:", request.data)
         return super().create(request, *args, **kwargs)
 
     queryset = Question.objects.all()
@@ -207,13 +208,14 @@ class OllamaGenerateView(APIView):
     Proxies POST requests from the client to the local Ollama API server.
     """
     def post(self, request, *args, **kwargs):
-        print("FILES RECEIVED:", request.FILES)
-        print(f"[OllamaGenerate] ConvID={request.data.get('conversation_id')}, AssignID={request.data.get('assignment_id')}")
+       
+        #print("FILES RECEIVED:", request.FILES)
+        #print(f"[OllamaGenerate] ConvID={request.data.get('conversation_id')}, AssignID={request.data.get('assignment_id')}")
 
-        print("DEBUG RAW request.data:", request.data)
-        print("DEBUG PROMPT TYPE:", type(request.data.get("prompt")))
-        print("DEBUG ASSIGNMENT TYPE:", type(request.data.get("assignment_id")))
-
+        #print("DEBUG RAW request.data:", request.data)
+        #print("DEBUG PROMPT TYPE:", type(request.data.get("prompt")))
+        #print("DEBUG ASSIGNMENT TYPE:", type(request.data.get("assignment_id")))
+        
         try:
             # get prompt data
             ollamaPrompt = request.data.get('prompt')
@@ -242,9 +244,9 @@ class OllamaGenerateView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 
-            print("FULL PROMPT AFTER MARKDOWN")
-            print(ollamaPrompt)
-            print("END OF FULL PROMPT AFTER MARKDOWN")
+            #print("FULL PROMPT AFTER MARKDOWN")
+            #print(ollamaPrompt)
+            #print("END OF FULL PROMPT AFTER MARKDOWN")
 
 
             if not ollamaPrompt or not ollamaPrompt.strip():
@@ -254,23 +256,22 @@ class OllamaGenerateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
     )
 
-            print("OLLAMA PROMPT RECEIVED:", ollamaPrompt[:200])
+            #print("OLLAMA PROMPT RECEIVED:", ollamaPrompt[:200])
 
-            print("|||||||||||||||||")
-            print("OLLAM MODEL RECEIVED:", ollamaModel)
-            print("|||||||||||||||||")
+            #print("|||||||||||||||||")
+            #print("OLLAM MODEL RECEIVED:", ollamaModel)
+            #print("|||||||||||||||||")
            
-            if "```" in ollamaPrompt:
-                user_part, assignment_part = ollamaPrompt.split("```", 1)
-                user_part = sanitize_input(user_part)
+           # if "```" in ollamaPrompt:
+            #    user_part, assignment_part = ollamaPrompt.split("```", 1)
+            #    user_part = sanitize_input(user_part)
+            #    ollamaPrompt = user_part + "```" + assignment_part
+            #else:
+            ollamaPrompt = sanitize_input(ollamaPrompt)
 
-                ollamaPrompt = user_part + "```" + assignment_part
-            else:
-                ollamaPrompt = sanitize_input(ollamaPrompt)
-
-                if contains_prompt_injection(ollamaPrompt):
-                    ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")
-                    ollamaPrompt = "[User tried to override system instructions — sanitized.]"
+            if contains_prompt_injection(ollamaPrompt):
+                ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")
+                ollamaPrompt = "[User tried to override system instructions — sanitized.]"
 
 
         # be more specific with error handling
