@@ -61,6 +61,7 @@ class Course(models.Model):
     course_id = models.AutoField(primary_key=True)
     name = models.TextField(blank=True, null=True)
     settings = models.TextField(blank=True, null=True)
+    teacher_email = models.EmailField(blank=True, null=True)
     #Defines Model as String
     def __str__(self):
         return self.name
