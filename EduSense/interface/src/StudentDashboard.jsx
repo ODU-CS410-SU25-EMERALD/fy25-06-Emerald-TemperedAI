@@ -28,7 +28,10 @@ export default function StudentDashboard() {
   const [fileLoading, setFileLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
-
+  const [studentId, setStudentId] = useState(() => {
+    // Retrieve the email saved by the Login screen
+    return localStorage.getItem('studentEmail'); 
+  });
 
   useEffect(() => {
     fetch("http://localhost:8000/api/courses/")
@@ -155,7 +158,7 @@ export default function StudentDashboard() {
         body: JSON.stringify({
           title: "New Chat",
           assignment: selectedAssignment || null,
-          student: 1,  // temp hardcoded student
+          student: studentId,  // replaced with ID from login
         }),
       });
 
@@ -272,6 +275,7 @@ export default function StudentDashboard() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('studentEmail');
     setChat([]);
     navigate("/");
   };
@@ -543,6 +547,13 @@ export default function StudentDashboard() {
 
         </div>
       </div>
+
+    {studentId && (
+      <div className="absolute bottom-4 left-4 text-xs italic text-gray-700">
+        StudentID = {studentId}
+      </div>
+    )}
+
     </div >
   );
 }

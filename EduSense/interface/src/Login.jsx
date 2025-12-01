@@ -29,6 +29,7 @@ export default function Login() {
 
   const onSubmit = (data) => {
     if (activeTab === "student") {
+      localStorage.setItem('studentEmail', data.email);
       navigate("/student-dashboard");
     } else if (activeTab === "teacher") {
       localStorage.setItem('teacherEmail', data.email);
