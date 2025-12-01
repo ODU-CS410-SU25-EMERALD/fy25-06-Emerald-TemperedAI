@@ -31,6 +31,7 @@ export default function Login() {
     if (activeTab === "student") {
       navigate("/student-dashboard");
     } else if (activeTab === "teacher") {
+      localStorage.setItem('teacherEmail', data.email);
       navigate("/teacher-dashboard");
     } else if (activeTab === "signup") {
       // Basic validation: check if passwords match

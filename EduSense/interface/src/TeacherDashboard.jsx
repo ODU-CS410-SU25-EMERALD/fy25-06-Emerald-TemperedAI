@@ -28,9 +28,10 @@ export default function TeacherDashboard() {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [teacherId, setTeacherId] = useState("logged.in@teacher.com");
-
-
+  const [teacherId, setTeacherId] = useState(() => {
+    // Retrieve the email saved by the Login screen
+    return localStorage.getItem('teacherEmail');
+  });
 
   useEffect(() => {
     if (!teacherId) return;
@@ -56,6 +57,7 @@ export default function TeacherDashboard() {
   }, [selectedCourse]);
 
   const handleLogout = () => {
+    localStorage.removeItem('teacherEmail');
     navigate("/");
   };
 
@@ -93,7 +95,7 @@ export default function TeacherDashboard() {
 
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
+    <div className="relative flex items-center justify-center h-screen bg-gradient-to-r from-[#496677]/80 to-[#F0EAD8]">
       <div className="w-[600px] bg-white/70 backdrop-blur-lg rounded-2xl shadow-xl p-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -309,8 +311,16 @@ export default function TeacherDashboard() {
           </div>
         )}
 
-
       </div>
+
+      {teacherId && (
+        <div className="absolute bottom-4 left-4">
+          <p className="text-xs italic text-gray-700">
+            TeacherID = {teacherId}
+          </p>
+        </div>
+      )}
+      
     </div>
   );
 }
