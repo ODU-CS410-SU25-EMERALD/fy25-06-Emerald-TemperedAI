@@ -257,7 +257,7 @@ export default function TeacherDashboard() {
             <input
               type="file"
               onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="block text-sm text-gray-700"
+              className="block text-sm text-gray-700 mt-6 mb-6"
             />
 
 
