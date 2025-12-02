@@ -325,25 +325,30 @@ class OllamaGenerateView(APIView):
         
         try:
             # get prompt data
-            ollamaPrompt = request.data.get('prompt')
+            studentPrompt = request.data.get('prompt')
 
             conversation_id = request.data.get("conversation") or request.data.get("conversation_id")
             assignment_id = request.data.get("assignment") or request.data.get("assignment_id")
 
             ollamaLogger.info(f"[OllamaGenerate] ConvID={conversation_id}, AssignID={assignment_id}")
             
+            assignment_block = ""
+            
+
             if 'file' in request.FILES:
                 uploaded_file = request.FILES['file']
                 markdown_text = convert_file_to_markdown(uploaded_file)
+                
                 if markdown_text is not None:
                     markdown_text = markdown_text.strip()
+                    
                     assignment_block = (
                         "\n\n### Assignment Document (Safe Attachment)\n"
                         "```\n"
                         f"{markdown_text}\n"
                         "```\n"
                     )
-                    ollamaPrompt = f"{(ollamaPrompt or '').strip()}{assignment_block}"
+
                 else:
                     return APIResponse(
                         {"error": "Failed to convert file to Markdown."},
@@ -355,7 +360,7 @@ class OllamaGenerateView(APIView):
             #print("END OF FULL PROMPT AFTER MARKDOWN")
 
 
-            if not ollamaPrompt or not ollamaPrompt.strip():
+            if not studentPrompt or not studentPrompt.strip():
                 ollamaLogger.error(f"Prompt missing or whitespace-only. Received: {repr(ollamaPrompt)}")
                 return APIResponse(
                 {"error": "A 'prompt' field is required in the request body."},
@@ -369,15 +374,17 @@ class OllamaGenerateView(APIView):
             #print("|||||||||||||||||")
            
             # sanitize prompt input
-            ollamaPrompt = sanitize_input(ollamaPrompt)
-            #ollamaLogger.debug(f"Ollama Prompt after sanitization: {ollamaPrompt}")
-
-            if contains_prompt_injection(ollamaPrompt):
+            if contains_prompt_injection(studentPrompt):
                 ollamaLogger.warning(f"Stripped prompt injection from user input.")
-                ollamaPrompt = "[User tried to override system instructions — sanitized.]"
+                studentPrompt = "[User tried to override system instructions — sanitized.]"
 
-            #ollamaLogger.debug(f"Ollama Prompt after sanitization: {ollamaPrompt}")
+            ollamaLogger.debug(f"Ollama Prompt after sanitization: {studentPrompt}")
 
+            studentPrompt = sanitize_input(studentPrompt)
+
+            ollamaLogger.debug(f"Ollama Prompt after sanitization: {studentPrompt}")
+
+            ollamaPrompt = f"{(studentPrompt or '').strip()}{assignment_block}"
 
         # be more specific with error handling
         except KeyError as e:
