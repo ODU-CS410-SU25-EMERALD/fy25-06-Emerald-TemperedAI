@@ -68,6 +68,8 @@ INJECTION_PATTERNS = [
     "do anything now"
 ]
 
+# Sanitizes user input by checking for banned words and replacing them.
+# Returns the sanitized string (with banned words replaced by "[filtered]").
 def sanitize_input(text: str) -> str:
     """
     Sanitizes user input by checking for banned words and replacing them.
@@ -86,6 +88,8 @@ def sanitize_input(text: str) -> str:
 
     return cleaned
 
+# Converts an uploaded file to Markdown using MarkItDown.
+# Returns the Markdown text or None if conversion fails.
 def convert_file_to_markdown(uploaded_file):
     """
     Converts an uploaded file to Markdown using MarkItDown.
@@ -116,6 +120,8 @@ def convert_file_to_markdown(uploaded_file):
             os.remove(temp_path)
 
 
+# Checks if the input text contains potential prompt injection patterns.
+# Returns True if injection patterns are found, else False.
 def contains_prompt_injection(text: str) -> bool:
     """
     Returns True if text appears to include a prompt injection or jailbreak attempt.
@@ -332,8 +338,8 @@ class OllamaGenerateView(APIView):
         #print("DEBUG PROMPT TYPE:", type(request.data.get("prompt")))
         #print("DEBUG ASSIGNMENT TYPE:", type(request.data.get("assignment_id")))
         
+        #  gets prompt data
         try:
-            # get prompt data
             studentPrompt = request.data.get('prompt')
 
             conversation_id = request.data.get("conversation") or request.data.get("conversation_id")
@@ -343,7 +349,7 @@ class OllamaGenerateView(APIView):
             
             assignment_block = ""
             
-
+            # process file upload if present
             if 'file' in request.FILES:
                 uploaded_file = request.FILES['file']
                 markdown_text = convert_file_to_markdown(uploaded_file)
@@ -368,7 +374,7 @@ class OllamaGenerateView(APIView):
             #print(ollamaPrompt)
             #print("END OF FULL PROMPT AFTER MARKDOWN")
 
-
+            # validate prompt presence
             if not studentPrompt or not studentPrompt.strip():
                 ollamaLogger.error(f"Prompt missing or whitespace-only. Received: {repr(ollamaPrompt)}")
                 return APIResponse(
@@ -393,9 +399,9 @@ class OllamaGenerateView(APIView):
 
             ollamaLogger.debug(f"Ollama Prompt after sanitization: {studentPrompt}")
 
+            # construct final prompt with assignment block if present
             ollamaPrompt = f"{(studentPrompt or '').strip()}{assignment_block}"
 
-        # be more specific with error handling
         except KeyError as e:
             ollamaLogger.error(f"Missing required field in request data: {e}")
             return APIResponse(

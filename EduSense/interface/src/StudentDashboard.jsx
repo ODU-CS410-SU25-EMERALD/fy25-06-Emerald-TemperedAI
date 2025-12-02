@@ -48,6 +48,7 @@ export default function StudentDashboard() {
 
 
 
+  // Fetch courses from backend
   useEffect(() => {
     fetch("http://localhost:8000/api/courses/")
       .then(res => res.json())
@@ -55,6 +56,7 @@ export default function StudentDashboard() {
       .catch(err => console.error("Failed to fetch courses:", err));
   }, []);
 
+  // Fetch assignments when a course is selected
   useEffect(() => {
     if (!selectedCourse) return;
 
@@ -86,9 +88,13 @@ export default function StudentDashboard() {
     return new File([blob], filename);
   }
 
+  // Sends the prompt and file to the backend API and returns the AI's response
+  // Handles errors and returns error messages as needed
+  // Returns either the AI response text or an object with an 'error' property
   async function sendPromptToBackend(promptText, file, conversationId, assignmentId) {
     console.log("DEBUG Sending Prompt:", promptText);
 
+    // Build form data
     try {
       const formData = new FormData();
       formData.append("prompt", String(promptText || "Student asked an empty question."));
@@ -106,6 +112,7 @@ export default function StudentDashboard() {
 
       console.log("WARNING Sending Prompt:", promptText);
 
+      // Send to backend
       const response = await fetch("http://localhost:8000/api/ollama/generate/", {
         method: "POST",
         body: formData,
@@ -123,7 +130,7 @@ export default function StudentDashboard() {
         return { error: errMsg };
       }
 
-
+      // Parse response
       const data = await response.json();
       return (
         data.response ||
@@ -138,13 +145,14 @@ export default function StudentDashboard() {
     }
   }
 
-  // For now, this only updates the chat visually — no backend call yet
-  const sendPrompt = async () => {
+    // Handles sending the user's prompt to the backend and updating chat state
+    const sendPrompt = async () => {
     const selectedCourseName = courses.find(c => c.course_id == selectedCourse)?.name || "";
     const selectedAssignmentTitle = assignments.find(a => a.assignment_id == selectedAssignment)?.title || "";
 
     setUserInput("");
 
+    // Basic validations
     if (fileLoading) {
       alert("Please wait, assignment file is still loading...");
       return;
@@ -177,6 +185,7 @@ export default function StudentDashboard() {
         }),
       });
 
+      // Parse response
       const convData = await convResponse.json();
       console.log("CONVERSATION CREATE RESPONSE:", convData);
 
@@ -185,14 +194,13 @@ export default function StudentDashboard() {
         return;
       }
 
-      // Your model uses conversation_id, NOT id
       convId = convData.conversation_id;
 
       // Save to React state (updates next render)
       setConversationId(convId);
     }
 
-
+    // Add student's message to chat
     const studentMsg = {
       sender: "student",
       text: userInput,
@@ -213,12 +221,14 @@ export default function StudentDashboard() {
     }
     )
 
+    // Prepare conversation history for context
     const updatedHistory = [...chat, studentMsg].slice(-12); // Limit to last 12 messages for context
 
     const historyText = updatedHistory
       .map((msg) => `${msg.sender === "student" ? "Student" : "AI"}: ${msg.text}`)
       .join("\n");
 
+    // Build prompt to send to backend
     const promptToSend = [
       `Course: ${selectedCourseName}`,
       `Assignment: ${selectedAssignmentTitle || "None Selected"}`,
@@ -230,6 +240,7 @@ export default function StudentDashboard() {
       userInput
     ].join("\n");
 
+    // Send to backend
     const fileToSend = selectedFile ? selectedFile : assignmentFile;
     const aiText = await sendPromptToBackend(
       promptToSend,
@@ -238,6 +249,7 @@ export default function StudentDashboard() {
       selectedAssignment ? selectedAssignment : null
     );
 
+    // Handle errors from backend
     if (aiText && aiText.error) {
       const errorMsg = {
         sender: "ai",
@@ -250,13 +262,14 @@ export default function StudentDashboard() {
       return;
     }
 
-
+    // Add AI's response to chat
     const aiMsg = {
       sender: "ai",
       text: aiText,
       time: new Date().toLocaleTimeString(),
     };
 
+    // Save LLM response to backend
     await fetch("http://localhost:8000/api/llm_responses/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -269,13 +282,12 @@ export default function StudentDashboard() {
       }),
     });
 
-
+    // Update chat state
     setChat((prevChat) => [...prevChat, aiMsg]);
     setUserInput("");
-    //setSelectedFile(null);
-
   };
 
+  // Starts a new chat by resetting relevant state
   const startNewChat = () => {
     setConversationId(null);
     setChat([
@@ -295,6 +307,7 @@ export default function StudentDashboard() {
     navigate("/");
   };
 
+  // Fetch conversation history on component mount
   useEffect(() => {
     fetch("http://localhost:8000/api/conversations/")
       .then((response) => response.json())
@@ -302,6 +315,7 @@ export default function StudentDashboard() {
       .catch((error) => console.error("Error fetching conversations:", error));
   }, []);
 
+  // Loads a conversation by ID and updates chat state
   const loadConversation = async (id) => {
     setConversationId(id);
 
@@ -310,6 +324,7 @@ export default function StudentDashboard() {
 
     const loadedChat = [];
 
+    // Merge questions and responses based on timestamps
     data.questions.forEach((q) => {
       loadedChat.push({
         sender: "student",
@@ -319,6 +334,7 @@ export default function StudentDashboard() {
       });
     });
 
+    // Sort LLM responses into chat
     data.llm_responses.forEach((r) => {
       loadedChat.push({
         sender: "ai",
@@ -334,10 +350,11 @@ export default function StudentDashboard() {
 
     setSelectedAssignment(data.assignment);
     setSelectedCourse(data.course);
-    setAssignmentFiles(null); // DB assignments have no files (yet)
+    setAssignmentFiles(null); // Clear previous file
 
   };
 
+  // Deletes a conversation by ID
   async function deleteConversation(id) {
     if (!window.confirm("Delete this chat?")) return;
 
