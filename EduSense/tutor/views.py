@@ -168,16 +168,17 @@ class conversationViewSet(ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         #print("DEBUG Conversation POST data:", request.data)
-        student_email = request.data.get('student')
+        student_id = request.data.get('student')
         
         try:
-            student_obj = Student.objects.get(email__iexact=student_email.strip()) 
-            request.data['student'] = student_obj.student_id 
-            
+            student_obj = Student.objects.get(pk=student_id) 
+    
         except Student.DoesNotExist:
             return APIResponse({
-                "student": [f"No Student object found for email: {student_email}"]
-            }, status=status.HTTP_400_BAD_REQUEST)        
+                "student": [f"No Student object found for email: {student_id}"]
+            }, status=status.HTTP_400_BAD_REQUEST)      
+
+        request.data['student'] = student_obj.student_id  
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -28,10 +28,25 @@ export default function StudentDashboard() {
   const [fileLoading, setFileLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [studentId, setStudentId] = useState(() => {
-    // Retrieve the email saved by the Login screen
-    return localStorage.getItem('studentEmail'); 
-  });
+  const [studentId, setStudentId] = useState(null);
+  // Retrieve the email saved by the Login screen
+  const studentEmail = localStorage.getItem("studentEmail");
+
+  useEffect(() => {
+    if (!studentEmail) return;
+
+    fetch(`http://localhost:8000/api/students/?email=${studentEmail}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.length > 0) {
+          setStudentId(data[0].student_id);
+        } else {
+          console.error("No student found for email:", studentEmail);
+        }
+      });
+  }, [studentEmail]);
+
+
 
   useEffect(() => {
     fetch("http://localhost:8000/api/courses/")
@@ -487,6 +502,7 @@ export default function StudentDashboard() {
 
 
           {/* Chat Area */}
+          
           <div className="flex-1 p-6 overflow-y-auto">
             {chat.length === 0 ? (
               <p className="text-center text-gray-500 mt-10">
@@ -514,6 +530,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Input Area */}
+          <p>Logged in Student ID: {studentId}</p>
           <div className="p-4 border-t flex gap-2 items-center">
             <input
               type="file"
@@ -548,11 +565,11 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-    {studentId && (
-      <div className="absolute bottom-4 left-4 text-xs italic text-gray-700">
-        StudentID = {studentId}
-      </div>
-    )}
+      {studentId && (
+        <div className="absolute bottom-4 left-4 text-xs italic text-gray-700">
+          StudentID = {studentId}
+        </div>
+      )}
 
     </div >
   );
