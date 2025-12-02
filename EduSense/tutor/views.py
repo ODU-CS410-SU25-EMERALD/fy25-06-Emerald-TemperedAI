@@ -73,14 +73,14 @@ def sanitize_input(text: str) -> str:
     Sanitizes user input by checking for banned words and replacing them.
     Returns the sanitized string (with banned words replaced by "[filtered]").
     """
-    ollamaLogger.debug(f"[Sanitizer] Input length: {len(text)} chars")
+    #ollamaLogger.debug(f"[Sanitizer] Input length: {len(text)} chars")
     if not text:
         return text
 
     cleaned = text
     for word in BANNED_WORDS:
         if word in cleaned:
-            ollamaLogger.warning(f"[Sanitizer] Redacting banned word: '{word}' from: {text}")
+            ollamaLogger.warning(f"[Sanitizer] Redacting banned word: '{word}'")
         cleaned = cleaned.replace(word, "[filtered]")
         
 
@@ -97,9 +97,6 @@ def convert_file_to_markdown(uploaded_file):
     temp_dir = Path(tempfile.gettempdir())
     filename = Path(uploaded_file.name).name
     temp_path = temp_dir / filename
-
-
-
 
     # Save the file temporarily
     with open(temp_path, "wb+") as destination:
@@ -130,10 +127,11 @@ def contains_prompt_injection(text: str) -> bool:
     lower_text = text.lower()
     for pattern in INJECTION_PATTERNS:
         if pattern in lower_text:
-            ollamaLogger.error(f"[Sanitizer] Detected potential prompt injection pattern: '{pattern}' in: {text}")
+            ollamaLogger.error(f"[Sanitizer] Detected potential prompt injection pattern: '{pattern}'")
             return True
    
     return False 
+
 #logging for better error visibility in terminal
 ollamaLogger = logging.getLogger(__name__)
 
@@ -321,7 +319,7 @@ class OllamaGenerateView(APIView):
         #print("FILES RECEIVED:", request.FILES)
         #print(f"[OllamaGenerate] ConvID={request.data.get('conversation_id')}, AssignID={request.data.get('assignment_id')}")
 
-        print("DEBUG RAW request.data:", request.data)
+        #print("DEBUG RAW request.data:", request.data)
         #print("DEBUG PROMPT TYPE:", type(request.data.get("prompt")))
         #print("DEBUG ASSIGNMENT TYPE:", type(request.data.get("assignment_id")))
         
@@ -352,9 +350,9 @@ class OllamaGenerateView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 
-            print("FULL PROMPT AFTER MARKDOWN")
-            print(ollamaPrompt)
-            print("END OF FULL PROMPT AFTER MARKDOWN")
+            #print("FULL PROMPT AFTER MARKDOWN")
+            #print(ollamaPrompt)
+            #print("END OF FULL PROMPT AFTER MARKDOWN")
 
 
             if not ollamaPrompt or not ollamaPrompt.strip():
@@ -370,10 +368,15 @@ class OllamaGenerateView(APIView):
             #print("OLLAM MODEL RECEIVED:", ollamaModel)
             #print("|||||||||||||||||")
            
+            # sanitize prompt input
+            ollamaPrompt = sanitize_input(ollamaPrompt)
+            #ollamaLogger.debug(f"Ollama Prompt after sanitization: {ollamaPrompt}")
 
             if contains_prompt_injection(ollamaPrompt):
-                ollamaLogger.warning(f"Stripped prompt injection from: {ollamaPrompt}")
+                ollamaLogger.warning(f"Stripped prompt injection from user input.")
                 ollamaPrompt = "[User tried to override system instructions — sanitized.]"
+
+            #ollamaLogger.debug(f"Ollama Prompt after sanitization: {ollamaPrompt}")
 
 
         # be more specific with error handling
