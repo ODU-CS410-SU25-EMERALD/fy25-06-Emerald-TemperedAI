@@ -224,6 +224,15 @@ class studentViewSet(ModelViewSet):
     queryset = Student.objects.all()
     serializer_class = StudentSerializer
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        email = self.request.query_params.get("email")
+
+        if email:
+            qs = qs.filter(email=email)
+
+        return qs
+
 
 ########################################### LLM ENDPOINTS ##########################################
 
